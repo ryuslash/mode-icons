@@ -24,8 +24,12 @@
 
 ;;; Code:
 
+(defconst mode-icons--load-file-name load-file-name
+  "Where mode-icons was loaded from.")
+
 (defun mode-icons-get-icon-file (name)
-  (concat user-emacs-directory "/icons/" name))
+  (concat (file-name-directory mode-icons--load-file-name)
+          "/icons/" name))
 
 (defvar mode-icons
   `(("Emacs-Lisp" . (image :type xpm
