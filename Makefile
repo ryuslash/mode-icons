@@ -10,7 +10,7 @@ all:
 dist: $(pkgname).tar
 
 $(pkgname).tar: $(pkgname)/mode-icons-pkg.el $(dests)
-	tar cjf $(pkgname).tar $(pkgname)
+	tar cf $(pkgname).tar $(pkgname)
 
 $(pkgname)/mode-icons-pkg.el: mode-icons.el
 	if [ ! -d "$(pkgname)" ]; then mkdir $(pkgname); fi
