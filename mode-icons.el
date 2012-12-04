@@ -59,10 +59,9 @@
     (when icon-spec
       (setq mode-name (propertize mode 'display (cdr icon-spec))))))
 
+;;;###autoload
 (defun set-current-mode-icon ()
   (set-mode-icon mode-name))
-
-(add-hook 'after-change-major-mode-hook 'set-current-mode-icon)
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
