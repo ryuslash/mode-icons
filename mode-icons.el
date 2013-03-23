@@ -50,7 +50,10 @@
                     :ascent center))
     ("HTML" . (image :type xpm
                      :file ,(mode-icons-get-icon-file "html.xpm")
-                     :ascent center)))
+                     :ascent center))
+    ("Org" . (image :type xpm
+                    :file ,(mode-icons-get-icon-file "org.xpm")
+                    :ascent center)))
   "Icons for major modes.")
 
 (defun set-mode-icon (mode)
