@@ -82,11 +82,11 @@ ICON-SPEC should be a specification from `mode-icons'."
   "Set the icon for MODE."
   (setq mode-name (get-mode-icon mode)))
 
-;;;###autoload
 (defun set-current-mode-icon ()
   "Set the icon for the current major mode."
   (set-mode-icon mode-name))
 
+;;;###autoload
 (define-minor-mode mode-icons-mode
   "Replace the name of the current major mode with an icon."
   :global t
