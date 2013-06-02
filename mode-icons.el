@@ -1,4 +1,4 @@
-;;; mode-icons.el --- Show icons for modes
+;;; mode-icons.el --- Show icons for modes -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2012  Tom Willemsen
 
@@ -25,45 +25,66 @@
 
 ;;; Code:
 
-(defconst mode-icons--load-file-name load-file-name
+(defconst mode-icons--directory
+  (if load-file-name
+      (file-name-directory load-file-name)
+    default-directory)
   "Where mode-icons was loaded from.")
 
-(defun mode-icons-get-icon-file (name)
-  (concat (file-name-directory mode-icons--load-file-name)
-          "/icons/" name))
+(defun mode-icons-get-icon-file (icon)
+  "Get the location of ICON.
+
+ICON should be a file name with extension.  The result is the
+absolute path to ICON."
+  (concat mode-icons--directory "/icons/" icon))
 
 (defvar mode-icons
-  `(("Emacs-Lisp" . (image :type xpm
-                           :file ,(mode-icons-get-icon-file "emacs.xpm")
-                           :ascent center))
-    ("Python" . (image :type xpm
-                       :file ,(mode-icons-get-icon-file "python.xpm")
-                       :ascent center))
-    ("Scheme" . (image :type xpm
-                       :file ,(mode-icons-get-icon-file "scheme.xpm")
-                       :ascent center))
-    ("Lisp" . (image :type xpm
-                     :file ,(mode-icons-get-icon-file "cl.xpm")
-                     :ascent center))
-    ("PHP" . (image :type xpm
-                    :file ,(mode-icons-get-icon-file "php.xpm")
-                    :ascent center))
-    ("HTML" . (image :type xpm
-                     :file ,(mode-icons-get-icon-file "html.xpm")
-                     :ascent center))
-    ("Org" . (image :type xpm
-                    :file ,(mode-icons-get-icon-file "org.xpm")
-                    :ascent center)))
-  "Icons for major modes.")
+  `(("Emacs-Lisp" "emacs" xpm)
+    ("Python" "python" xpm)
+    ("Scheme" "scheme" xpm)
+    ("Lisp" "cl" xpm)
+    ("PHP" "php" xpm)
+    ("HTML" "html" xpm)
+    ("Org" "org" xpm))
+  "Icons for major modes.
+
+Each specification is a list with the first element being the
+name of the major mode.  The second the name of the icon file,
+without the extension.  And the third being the type of icon.")
+
+(defun get-icon-display (icon type)
+  "Get the value for the display property of ICON having TYPE.
+
+ICON should be a string naming the file of the icon, without its
+extension.  Type should be a symbol designating the file type for
+the icon."
+  (let ((icon-path (mode-icons-get-icon-file
+                    (concat icon "." (symbol-name type)))))
+   `(image :type ,type :file ,icon-path :ascent center)))
+
+(defun propertize-mode (mode icon-spec)
+  "Propertize MODE with ICON-SPEC.
+
+MODE should be a string, the name of the mode to propertize.
+ICON-SPEC should be a specification from `mode-icons'."
+  (propertize
+   mode 'display (get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))
+
+(defun get-mode-icon (mode)
+  "Get the icon for MODE, if there is one."
+  (let* ((mode-name (format-mode-line mode))
+         (icon-spec (assoc mode-name mode-icons)))
+    (if icon-spec
+        (propertize-mode mode-name icon-spec)
+      mode-name)))
 
 (defun set-mode-icon (mode)
-  (setq mode (format-mode-line mode))
-  (let ((icon-spec (assoc mode mode-icons)))
-    (when icon-spec
-      (setq mode-name (propertize mode 'display (cdr icon-spec))))))
+  "Set the icon for MODE."
+  (setq mode-name (get-mode-icon mode)))
 
 ;;;###autoload
 (defun set-current-mode-icon ()
+  "Set the icon for the current major mode."
   (set-mode-icon mode-name))
 
 (provide 'mode-icons)
