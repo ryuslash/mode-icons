@@ -87,5 +87,12 @@ ICON-SPEC should be a specification from `mode-icons'."
   "Set the icon for the current major mode."
   (set-mode-icon mode-name))
 
+(define-minor-mode mode-icons-mode
+  "Replace the name of the current major mode with an icon."
+  :global t
+  (if mode-icons-mode
+      (add-hook 'after-change-major-mode-hook 'set-current-mode-icon)
+    (remove-hook 'after-change-major-mode-hook 'set-current-mode-icon)))
+
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
