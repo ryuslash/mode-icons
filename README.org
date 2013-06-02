@@ -31,3 +31,9 @@
     Place ~mode-icons.el~ somewhere in your =load-path= and copy the
     ~icons/~ directory there as well. Then =require= ~mode-icons~ in your
     [[http://gnu.org/software/emacs][Emacs]] init file.
+
+** Usage
+
+   Once installed you can add =(mode-icons-mode)= to your init file or
+   customize the =mode-icons-mode= variable (using the Customize
+   interface) to enable ~mode-icons~.
