@@ -34,6 +34,4 @@
 
 ** Usage
 
-   Once installed you can add =(mode-icons-mode)= to your init file or
-   customize the =mode-icons-mode= variable (using the Customize
-   interface) to enable ~mode-icons~.
+   Once installed you can add =(mode-icons-mode)= to your init file.
