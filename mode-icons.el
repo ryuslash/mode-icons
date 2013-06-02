@@ -1,10 +1,11 @@
 ;;; mode-icons.el --- Show icons for modes -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2012  Tom Willemsen
+;; Copyright (C) 2012  Tom Willemse
 
-;; Author: Tom Willemsen <thomas@aethon.nl>
+;; Author: Tom Willemse <tom@ryuslash.org>
 ;; Keywords: multimedia
 ;; Version: 0.1.0
+;; URL: http://ryuslash.org/projects/mode-icons.html
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
