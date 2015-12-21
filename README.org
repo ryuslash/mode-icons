@@ -1,10 +1,12 @@
-#+STARTUP: showall
+#+TITLE: mode-icons
+#+DATE: Monday, Dec 21 2015
+#+STARTUP: content
 
-* Mode-icons
+Show icons instead of mode names in emacs.
 
-  Show icons instead of mode names in emacs.
+[[https://raw.githubusercontent.com/rhoit/mode-icons/dump/screenshots/screenshot01.png]]
 
-  Modes that have icons instead of names now:
+Modes that have icons instead of names now:
 
   - Emacs-Lisp
   - Python
@@ -12,26 +14,18 @@
   - Lisp
   - PHP
   - HTML
+  - CSS
+  - JS
+  - SVG
 
-** Installation
+* Installation
 
-   To install use either method:
+** manually
 
-*** package.el
+   Place ~mode-icons.el~ somewhere in your =load-path= and copy the
+   ~icons/~ directory there as well. Then =require= ~mode-icons~ in your
+   [[http://gnu.org/software/emacs][Emacs]] init file.
 
-    If you have [[http://gnu.org/software/emacs][Emacs]] 24 or ~package.el~ installed manually you can just
-    create the tar file and use =package-install-file= to install it.
+* Usage
 
-**** Create the tar file
-
-     Use =make dist= to create the tar file needed for ~package.el~.
-
-*** manually
-
-    Place ~mode-icons.el~ somewhere in your =load-path= and copy the
-    ~icons/~ directory there as well. Then =require= ~mode-icons~ in your
-    [[http://gnu.org/software/emacs][Emacs]] init file.
-
-** Usage
-
-   Once installed you can add =(mode-icons-mode)= to your init file.
+  Once installed you can add =(mode-icons-mode)= to your init file.
