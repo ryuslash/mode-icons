@@ -44,7 +44,12 @@ absolute path to ICON."
     ("Python" "python" xpm)
     ("Scheme" "scheme" xpm)
     ("Lisp" "cl" xpm)
+    ("auto-dim-other-buffers" "dim" xpm)
     ("PHP" "php" xpm)
+    ("CSS" "css" xpm)
+    ("JavaScript" "js" xpm)
+    ("YASnippet" "yas" xpm)
+    ("Image[imagemagick]" "svg" xpm)
     ("HTML" "html" xpm)
     ("Org" "org" xpm))
   "Icons for major modes.
