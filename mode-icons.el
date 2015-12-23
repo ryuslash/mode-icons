@@ -56,6 +56,7 @@ absolute path to ICON."
     ("Slim" "slim" xpm)
     ("Coffee" "coffee" xpm)
     ("Sass" "sass" xpm)
+    ("SCSS" "sass" xpm)
     ("YAML" "yaml" xpm)
     ("Haml" "haml" xpm))
   "Icons for major modes.
