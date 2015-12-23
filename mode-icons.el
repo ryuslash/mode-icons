@@ -52,7 +52,12 @@ absolute path to ICON."
     ("Image[imagemagick]" "svg" xpm)
     ("HTML" "html" xpm)
     ("Org" "org" xpm)
-    ("Ruby" "ruby" xpm))
+    ("Ruby" "ruby" xpm)
+    ("Slim" "slim" xpm)
+    ("Coffee" "coffee" xpm)
+    ("Sass" "sass" xpm)
+    ("YAML" "yaml" xpm)
+    ("Haml" "haml" xpm))
   "Icons for major modes.
 
 Each specification is a list with the first element being the
