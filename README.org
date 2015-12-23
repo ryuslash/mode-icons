@@ -18,6 +18,7 @@ Modes that have icons instead of names now:
 | Org-mode   | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/org.png]]    |
 | PHP        | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/php.png]]    |
 | Python     | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/python.png]] |
+| Ruby       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/ruby.png]] |
 | SVG        | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/svg.png]]    |
 | Scheme     | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/scheme.png]] |
 | Shell      | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/bash.png]]   |
