@@ -10,18 +10,23 @@ Modes that have icons instead of names now:
 
 | Modes      | icon                                                                     |
 |------------+--------------------------------------------------------------------------|
+| Coffee     | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/coffee.png]] |
 | CSS        | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/css.png]]    |
 | Emacs-Lisp | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/emacs.png]]  |
+| Haml       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/haml.png]]   |
 | HTML       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/html.png]]   |
 | JS         | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/js.png]]     |
 | Lisp       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/cl.png]]     |
 | Org-mode   | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/org.png]]    |
 | PHP        | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/php.png]]    |
 | Python     | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/python.png]] |
-| Ruby       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/ruby.png]] |
+| Ruby       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/ruby.png]]   |
 | SVG        | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/svg.png]]    |
+| Sass       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/sass.png]]   |
 | Scheme     | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/scheme.png]] |
 | Shell      | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/bash.png]]   |
+| Slim       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/slim.png]]   |
+| YAML       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/yaml.png]]   |
 
 
 
