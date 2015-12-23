@@ -51,7 +51,8 @@ absolute path to ICON."
     ("YASnippet" "yas" xpm)
     ("Image[imagemagick]" "svg" xpm)
     ("HTML" "html" xpm)
-    ("Org" "org" xpm))
+    ("Org" "org" xpm)
+    ("Ruby" "ruby" xpm))
   "Icons for major modes.
 
 Each specification is a list with the first element being the
