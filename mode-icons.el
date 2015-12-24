@@ -1,3 +1,4 @@
+
 ;;; mode-icons.el --- Show icons for modes -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013  Tom Willemse
@@ -40,24 +41,27 @@ absolute path to ICON."
   (concat mode-icons--directory "/icons/" icon))
 
 (defvar mode-icons
-  `(("Emacs-Lisp" "emacs" xpm)
-    ("Python" "python" xpm)
-    ("Scheme" "scheme" xpm)
-    ("Lisp" "cl" xpm)
-    ("PHP" "php" xpm)
+  `(
     ("CSS" "css" xpm)
-    ("JavaScript" "js" xpm)
-    ("Shell-script" "bash" xpm)
-    ("Image[imagemagick]" "svg" xpm)
-    ("HTML" "html" xpm)
-    ("Org" "org" xpm)
-    ("Ruby" "ruby" xpm)
-    ("Slim" "slim" xpm)
     ("Coffee" "coffee" xpm)
-    ("Sass" "sass" xpm)
+    ("Emacs-Lisp" "emacs" xpm)
+    ("HTML" "html" xpm)
+    ("Haml" "haml" xpm)
+    ("Image[imagemagick]" "svg" xpm)
+    ("JavaScript" "js" xpm)
+    ("Lisp" "cl" xpm)
+    ("Org" "org" xpm)
+    ("PHP" "php" xpm)
+    ("Python" "python" xpm)
+    ("Ruby" "ruby" xpm)
     ("SCSS" "sass" xpm)
+    ("Sass" "sass" xpm)
+    ("Scheme" "scheme" xpm)
+    ("Shell-script" "bash" xpm)
+    ("Slim" "slim" xpm)
     ("YAML" "yaml" xpm)
-    ("Haml" "haml" xpm))
+    ("YASnippet" "yas" xpm)
+    )
   "Icons for major modes.
 
 Each specification is a list with the first element being the
