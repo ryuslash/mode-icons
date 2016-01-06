@@ -44,6 +44,7 @@ absolute path to ICON."
   `(
     ("CSS" "css" xpm)
     ("Coffee" "coffee" xpm)
+    ("Compilation" "compile" xpm)
     ("Emacs-Lisp" "emacs" xpm)
     ("HTML" "html" xpm)
     ("Haml" "haml" xpm)
