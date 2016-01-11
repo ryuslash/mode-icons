@@ -47,6 +47,7 @@ absolute path to ICON."
     ("Compilation" "compile" xpm)
     ("Emacs-Lisp" "emacs" xpm)
     ("HTML" "html" xpm)
+    ("Web" "html" xpm)
     ("Haml" "haml" xpm)
     ("Image[imagemagick]" "svg" xpm)
     ("JavaScript" "js" xpm)
