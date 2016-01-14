@@ -61,6 +61,7 @@ absolute path to ICON."
     ("Scheme" "scheme" xpm)
     ("Shell-script" "bash" xpm)
     ("Slim" "slim" xpm)
+    ("Term" "term" xpm)
     ("Web" "html" xpm)
     ("XML" "xml" xpm)
     ("YAML" "yaml" xpm)
