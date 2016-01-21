@@ -58,6 +58,8 @@ absolute path to ICON."
     ("Projectile Rails Server" "rails" xpm)
     ("Python" "python" xpm)
     ("Ruby" "ruby" xpm)
+    ("ESS[S]" "R" xpm)
+    ("iESS" "R" xpm)
     ("SCSS" "sass" xpm)
     ("Sass" "sass" xpm)
     ("Scheme" "scheme" xpm)
