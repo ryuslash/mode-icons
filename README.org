@@ -1,37 +1,43 @@
-#+STARTUP: showall
+#+TITLE: mode-icons
+#+DATE: Monday, Dec 21 2015
+#+STARTUP: content
 
-* Mode-icons
+Show icons instead of mode names in emacs.
 
-  Show icons instead of mode names in emacs.
+[[https://raw.githubusercontent.com/rhoit/mode-icons/dump/screenshots/screenshot01.png]]
 
-  Modes that have icons instead of names now:
+Modes that have icons instead of names now:
 
-  - Emacs-Lisp
-  - Python
-  - Scheme
-  - Lisp
-  - PHP
-  - HTML
+| Modes      | icon                                                                     |
+|------------+--------------------------------------------------------------------------|
+| Coffee     | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/coffee.png]] |
+| CSS        | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/css.png]]    |
+| Emacs-Lisp | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/emacs.png]]  |
+| Haml       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/haml.png]]   |
+| HTML       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/html.png]]   |
+| JS         | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/js.png]]     |
+| Lisp       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/cl.png]]     |
+| Org-mode   | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/org.png]]    |
+| PHP        | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/php.png]]    |
+| Python     | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/python.png]] |
+| Ruby       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/ruby.png]]   |
+| SVG        | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/svg.png]]    |
+| Sass       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/sass.png]]   |
+| Scheme     | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/scheme.png]] |
+| Shell      | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/bash.png]]   |
+| Slim       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/slim.png]]   |
+| YAML       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/yaml.png]]   |
 
-** Installation
 
-   To install use either method:
 
-*** package.el
+* Installation
 
-    If you have [[http://gnu.org/software/emacs][Emacs]] 24 or ~package.el~ installed manually you can just
-    create the tar file and use =package-install-file= to install it.
+** manually
 
-**** Create the tar file
+   Place ~mode-icons.el~ somewhere in your =load-path= and copy the
+   ~icons/~ directory there as well. Then =require= ~mode-icons~ in your
+   [[http://gnu.org/software/emacs][Emacs]] init file.
 
-     Use =make dist= to create the tar file needed for ~package.el~.
+* Usage
 
-*** manually
-
-    Place ~mode-icons.el~ somewhere in your =load-path= and copy the
-    ~icons/~ directory there as well. Then =require= ~mode-icons~ in your
-    [[http://gnu.org/software/emacs][Emacs]] init file.
-
-** Usage
-
-   Once installed you can add =(mode-icons-mode)= to your init file.
+  Once installed you can add =(mode-icons-mode)= to your init file.
