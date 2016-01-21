@@ -1,4 +1,3 @@
-
 ;;; mode-icons.el --- Show icons for modes -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013  Tom Willemse
