@@ -113,10 +113,18 @@ ICON-SPEC should be a specification from `mode-icons'."
    (t (propertize
        mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))))
 
+(defun mode-icons-get-icon-spec (mode)
+  "Get icon spec based on regular expression."
+  (catch 'found-mode
+    (dolist (item mode-icons)
+      (when (string-match-p (car item) mode)
+	(throw 'found-mode item)))
+    nil))
+
 (defun mode-icons-get-mode-icon (mode)
   "Get the icon for MODE, if there is one."
   (let* ((mode-name (format-mode-line mode))
-         (icon-spec (assoc mode-name mode-icons)))
+         (icon-spec (mode-icons-get-icon-spec mode-name)))
     (if icon-spec
         (mode-icons-propertize-mode mode-name icon-spec)
       mode-name)))
@@ -150,7 +158,7 @@ ICON-SPEC should be a specification from `mode-icons'."
     (dolist (mode minor-mode-alist)
       (unless (assq (car mode) mode-icons-set-minor-mode-icon-alist)
 	(setq mode-name (format-mode-line mode)
-	      icon-spec (assoc mode-name mode-icons))
+	      icon-spec (mode-icons-get-icon-spec mode-name))
 	(when icon-spec
 	  (setq minor (assq (car mode) minor-mode-alist))
 	  (when minor
