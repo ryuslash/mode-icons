@@ -129,9 +129,29 @@ ICON-SPEC should be a specification from `mode-icons'."
         (mode-icons-propertize-mode mode-name icon-spec)
       mode-name)))
 
+(defvar mode-icons-cached-mode-name nil
+  "Cached mode name to restore when disabling mode-icons.")
+
 (defun mode-icons-set-mode-icon (mode)
   "Set the icon for MODE."
-  (setq mode-name (mode-icons-get-mode-icon mode)))
+  (unless mode-icons-cached-mode-name
+    (set (make-local-variable 'mode-icons-cached-mode-name)
+	 mode-name)
+    (setq mode-name (mode-icons-get-mode-icon mode))))
+
+(defun mode-icons-major-mode-icons-undo ()
+  "Undo the mode-name changes"
+  (dolist (b (buffer-list))
+    (with-current-buffer b
+      (when mode-icons-cached-mode-name
+	(setq mode-name mode-icons-cached-mode-name
+	      mode-icons-cached-mode-name nil)))))
+
+(defun mode-icons-major-mode-icons ()
+  "Apply mode name changes on all buffers."
+  (dolist (b (buffer-list))
+    (with-current-buffer b
+      (mode-icons-set-current-mode-icon))))
 
 (defun mode-icons-set-current-mode-icon ()
   "Set the icon for the current major mode."
@@ -177,10 +197,11 @@ ICON-SPEC should be a specification from `mode-icons'."
         (add-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
 	(add-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
 	(mode-icons-set-minor-mode-icon)
-        (mode-icons-set-current-mode-icon))
+	(mode-icons-major-mode-icons))
     (remove-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
     (remove-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
-    (mode-icons-set-minor-mode-icon-undo)))
+    (mode-icons-set-minor-mode-icon-undo)
+    (mode-icons-major-mode-icons-undo)))
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
