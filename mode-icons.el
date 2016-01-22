@@ -26,6 +26,10 @@
 ;;
 
 ;;; Code:
+(defgroup mode-icons nil
+  "Provide icons for major modes."
+  :group 'editing-basics
+  :group 'convenience)
 
 (defconst mode-icons--directory
   (if load-file-name
@@ -40,9 +44,8 @@ ICON should be a file name with extension.  The result is the
 absolute path to ICON."
   (concat mode-icons--directory "/icons/" icon))
 
-(defvar mode-icons
-  `(
-    ("CSS" "css" xpm)
+(defcustom mode-icons
+  '(("CSS" "css" xpm)
     ("Coffee" "coffee" xpm)
     ("Compilation" "compile" xpm)
     ("Emacs-Lisp" "emacs" xpm)
@@ -71,12 +74,24 @@ absolute path to ICON."
     ("YAML" "yaml" xpm)
     ("YASnippet" "yas" xpm)
     (" yas" "yas" xpm)
-    )
+    (" hs" "hs" xpm))
   "Icons for major and minor modes.
 
-Each specification is a list with the first element being the
+Each specificatioun is a list with the first element being the
 name of the major mode.  The second the name of the icon file,
-without the extension.  And the third being the type of icon.")
+without the extension.  And the third being the type of icon."
+  :type '(repeat
+	  (list (string :tag "Regular Expression")
+		(choice
+		 (string :tag "Icon Name")
+		 (const :tag "Suppress" nil))
+		(choice
+		 (const :tag "png" png)
+		 (const :tag "gif" gif)
+		 (const :tag "jpeg" jepg)
+		 (const :tag "xbm" xbm)
+		 (const :tag "xpm" xpm))))
+  :group 'mode-icons)
 
 (defun mode-icons-get-icon-display (icon type)
   "Get the value for the display property of ICON having TYPE.
@@ -93,8 +108,10 @@ the icon."
 
 MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'."
-  (propertize
-   mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))
+  (cond
+   ((not (nth 1 icon-spec)) "")
+   (t (propertize
+       mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))))
 
 (defun mode-icons-get-mode-icon (mode)
   "Get the icon for MODE, if there is one."
@@ -122,6 +139,11 @@ ICON-SPEC should be a specification from `mode-icons'."
 	(setcdr minor (cdr mode)))))
   (setq mode-icons-set-minor-mode-icon-alist nil))
 
+(defcustom mode-icons-separate-images-with-spaces t
+  "Separate minor-mode icons with spaces."
+  :type 'boolean
+  :group 'mode-icons)
+
 (defun mode-icons-set-minor-mode-icon ()
   "Set the icon for the minor modes."
   (let (icon-spec mode-name minor)
@@ -135,7 +157,8 @@ ICON-SPEC should be a specification from `mode-icons'."
 	    (or (assq (car mode) mode-icons-set-minor-mode-icon-alist)
 		(push (copy-sequence minor) mode-icons-set-minor-mode-icon-alist))
 	    (setq mode-name (replace-regexp-in-string "^ " "" mode-name))
-	    (setcdr minor (list (concat " " (mode-icons-propertize-mode mode-name icon-spec))))))))))
+	    (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
+					(mode-icons-propertize-mode mode-name icon-spec))))))))))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
