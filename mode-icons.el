@@ -101,17 +101,34 @@ extension.  Type should be a symbol designating the file type for
 the icon."
   (let ((icon-path (mode-icons-get-icon-file
                     (concat icon "." (symbol-name type)))))
-   `(image :type ,type :file ,icon-path :ascent center)))
+    `(image :type ,type :file ,icon-path :ascent center)))
 
-(defun mode-icons-propertize-mode (mode icon-spec)
+(defcustom mode-icons-minor-mode-base-text-properties
+  '('help-echo 'rm--help-echo
+               'mouse-face 'mode-line-highlight
+               'local-map mode-line-minor-mode-keymap)
+  "List of text propeties to apply to every minor mode."
+  :type '(repeat sexp)
+  :group 'mode-icons)
+
+(defvar mode-icons-powerline-p nil)
+(defun mode-icons-need-update-p ()
+  "Determine if the mode-icons need an update"
+  (not (or (and (boundp 'rich-minority-mode) rich-minority-mode)
+           (member 'sml/pos-id-separator mode-line-format)
+           (string-match-p "powerline" (prin1-to-string mode-line-format)))))
+
+(defun mode-icons-propertize-mode (mode icon-spec &optional extra-props)
   "Propertize MODE with ICON-SPEC.
 
 MODE should be a string, the name of the mode to propertize.
-ICON-SPEC should be a specification from `mode-icons'."
+ICON-SPEC should be a specification from `mode-icons'.
+EXTRA-PROPS should be a list of extra properties to apply to the text."
   (cond
    ((not (nth 1 icon-spec)) "")
-   (t (propertize
-       mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))))
+   ((and extra-props (mode-icons-need-update-p))
+    (eval `(propertize ,mode 'display ',(mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) ,@extra-props)))
+   (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))))
 
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec based on regular expression."
@@ -165,7 +182,8 @@ ICON-SPEC should be a specification from `mode-icons'."
       (setq minor (assq (car mode) minor-mode-alist))
       (when minor
         (setcdr minor (cdr mode)))))
-  (setq mode-icons-set-minor-mode-icon-alist nil))
+  (setq mode-icons-set-minor-mode-icon-alist nil)
+  (force-mode-line-update))
 
 (defcustom mode-icons-separate-images-with-spaces t
   "Separate minor-mode icons with spaces."
@@ -186,8 +204,34 @@ ICON-SPEC should be a specification from `mode-icons'."
                 (push (copy-sequence minor) mode-icons-set-minor-mode-icon-alist))
             (setq mode-name (replace-regexp-in-string "^ " "" mode-name))
             (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
-                                        (mode-icons-propertize-mode mode-name icon-spec)))))))))
+                                        (mode-icons-propertize-mode mode-name icon-spec mode-icons-minor-mode-base-text-properties)))))))))
   (force-mode-line-update))
+
+(defun mode-icons--generate-minor-mode-list ()
+  "Extracts all rich strings necessary for the minor mode list."
+  (split-string (format-mode-line minor-mode-alist)))
+
+;; Based on rich-minority by Artur Malabarba
+(defvar mode-icons--backup-construct nil)
+(defvar mode-icons--mode-line-construct
+  '(:eval (mode-icons--generate-minor-mode-list))
+  "Construct used to replace `minor-mode-alist'.")
+
+(defun mode-icons-fix (&optional enable)
+  "Fix mode-icons."
+  (if enable
+      (let ((place (or (member 'minor-mode-alist mode-line-modes)
+                       (cl-member-if
+                        (lambda (x) (and (listp x)
+                                    (equal (car x) :propertize)
+                                    (equal (cadr x) '("" minor-mode-alist))))
+                        mode-line-modes))))
+        (when place
+          (setq mode-icons--backup-construct (car place))
+          (setcar place mode-icons--mode-line-construct)))
+    (let ((place (member mode-icons--mode-line-construct mode-line-modes)))
+      (when place
+        (setcar place mode-icons--backup-construct)))))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
@@ -197,12 +241,14 @@ ICON-SPEC should be a specification from `mode-icons'."
       (progn
         (add-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
         (add-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
+        (mode-icons-fix t)
         (mode-icons-set-minor-mode-icon)
         (mode-icons-major-mode-icons))
     (remove-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
     (remove-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
     (mode-icons-set-minor-mode-icon-undo)
-    (mode-icons-major-mode-icons-undo)))
+    (mode-icons-major-mode-icons-undo)
+    (mode-icons-fix)))
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
