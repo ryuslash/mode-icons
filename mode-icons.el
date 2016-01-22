@@ -112,6 +112,31 @@ ICON-SPEC should be a specification from `mode-icons'."
   "Set the icon for the current major mode."
   (mode-icons-set-mode-icon mode-name))
 
+(defvar mode-icons-set-minor-mode-icon-alist nil)
+
+(defun mode-icons-set-minor-mode-icon-undo ()
+  (let (minor)
+    (dolist (mode mode-icons-set-minor-mode-icon-alist)
+      (setq minor (assq (car mode) minor-mode-alist))
+      (when minor
+	(setcdr minor (cdr mode)))))
+  (setq mode-icons-set-minor-mode-icon-alist nil))
+
+(defun mode-icons-set-minor-mode-icon ()
+  "Set the icon for the minor modes."
+  (let (icon-spec mode-name minor)
+    (dolist (mode minor-mode-alist)
+      (unless (assq (car mode) mode-icons-set-minor-mode-icon-alist)
+	(setq mode-name (format-mode-line mode)
+	      icon-spec (assoc mode-name mode-icons))
+	(when icon-spec
+	  (setq minor (assq (car mode) minor-mode-alist))
+	  (when minor
+	    (or (assq (car mode) mode-icons-set-minor-mode-icon-alist)
+		(push (copy-sequence minor) mode-icons-set-minor-mode-icon-alist))
+	    (setq mode-name (replace-regexp-in-string "^ " "" mode-name))
+	    (setcdr minor (list (concat " " (mode-icons-propertize-mode mode-name icon-spec))))))))))
+
 ;;;###autoload
 (define-minor-mode mode-icons-mode
   "Replace the name of the current major mode with an icon."
@@ -119,8 +144,12 @@ ICON-SPEC should be a specification from `mode-icons'."
   (if mode-icons-mode
       (progn
         (add-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
+	(add-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
+	(mode-icons-set-minor-mode-icon)
         (mode-icons-set-current-mode-icon))
-    (remove-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)))
+    (remove-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
+    (remove-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
+    (mode-icons-set-minor-mode-icon-undo)))
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
