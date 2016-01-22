@@ -81,16 +81,16 @@ Each specificatioun is a list with the first element being the
 name of the major mode.  The second the name of the icon file,
 without the extension.  And the third being the type of icon."
   :type '(repeat
-	  (list (string :tag "Regular Expression")
-		(choice
-		 (string :tag "Icon Name")
-		 (const :tag "Suppress" nil))
-		(choice
-		 (const :tag "png" png)
-		 (const :tag "gif" gif)
-		 (const :tag "jpeg" jpeg)
-		 (const :tag "xbm" xbm)
-		 (const :tag "xpm" xpm))))
+          (list (string :tag "Regular Expression")
+                (choice
+                 (string :tag "Icon Name")
+                 (const :tag "Suppress" nil))
+                (choice
+                 (const :tag "png" png)
+                 (const :tag "gif" gif)
+                 (const :tag "jpeg" jpeg)
+                 (const :tag "xbm" xbm)
+                 (const :tag "xpm" xpm))))
   :group 'mode-icons)
 
 (defun mode-icons-get-icon-display (icon type)
@@ -118,7 +118,7 @@ ICON-SPEC should be a specification from `mode-icons'."
   (catch 'found-mode
     (dolist (item mode-icons)
       (when (string-match-p (car item) mode)
-	(throw 'found-mode item)))
+        (throw 'found-mode item)))
     nil))
 
 (defun mode-icons-get-mode-icon (mode)
@@ -136,7 +136,7 @@ ICON-SPEC should be a specification from `mode-icons'."
   "Set the icon for MODE."
   (unless mode-icons-cached-mode-name
     (set (make-local-variable 'mode-icons-cached-mode-name)
-	 mode-name)
+         mode-name)
     (setq mode-name (mode-icons-get-mode-icon mode))))
 
 (defun mode-icons-major-mode-icons-undo ()
@@ -144,8 +144,8 @@ ICON-SPEC should be a specification from `mode-icons'."
   (dolist (b (buffer-list))
     (with-current-buffer b
       (when mode-icons-cached-mode-name
-	(setq mode-name mode-icons-cached-mode-name
-	      mode-icons-cached-mode-name nil)))))
+        (setq mode-name mode-icons-cached-mode-name
+              mode-icons-cached-mode-name nil)))))
 
 (defun mode-icons-major-mode-icons ()
   "Apply mode name changes on all buffers."
@@ -164,7 +164,7 @@ ICON-SPEC should be a specification from `mode-icons'."
     (dolist (mode mode-icons-set-minor-mode-icon-alist)
       (setq minor (assq (car mode) minor-mode-alist))
       (when minor
-	(setcdr minor (cdr mode)))))
+        (setcdr minor (cdr mode)))))
   (setq mode-icons-set-minor-mode-icon-alist nil))
 
 (defcustom mode-icons-separate-images-with-spaces t
@@ -177,16 +177,16 @@ ICON-SPEC should be a specification from `mode-icons'."
   (let (icon-spec mode-name minor)
     (dolist (mode minor-mode-alist)
       (unless (assq (car mode) mode-icons-set-minor-mode-icon-alist)
-	(setq mode-name (format-mode-line mode)
-	      icon-spec (mode-icons-get-icon-spec mode-name))
-	(when icon-spec
-	  (setq minor (assq (car mode) minor-mode-alist))
-	  (when minor
-	    (or (assq (car mode) mode-icons-set-minor-mode-icon-alist)
-		(push (copy-sequence minor) mode-icons-set-minor-mode-icon-alist))
-	    (setq mode-name (replace-regexp-in-string "^ " "" mode-name))
-	    (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
-					(mode-icons-propertize-mode mode-name icon-spec)))))))))
+        (setq mode-name (format-mode-line mode)
+              icon-spec (mode-icons-get-icon-spec mode-name))
+        (when icon-spec
+          (setq minor (assq (car mode) minor-mode-alist))
+          (when minor
+            (or (assq (car mode) mode-icons-set-minor-mode-icon-alist)
+                (push (copy-sequence minor) mode-icons-set-minor-mode-icon-alist))
+            (setq mode-name (replace-regexp-in-string "^ " "" mode-name))
+            (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
+                                        (mode-icons-propertize-mode mode-name icon-spec)))))))))
   (force-mode-line-update))
 
 ;;;###autoload
@@ -196,9 +196,9 @@ ICON-SPEC should be a specification from `mode-icons'."
   (if mode-icons-mode
       (progn
         (add-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
-	(add-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
-	(mode-icons-set-minor-mode-icon)
-	(mode-icons-major-mode-icons))
+        (add-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
+        (mode-icons-set-minor-mode-icon)
+        (mode-icons-major-mode-icons))
     (remove-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
     (remove-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
     (mode-icons-set-minor-mode-icon-undo)
@@ -206,3 +206,6 @@ ICON-SPEC should be a specification from `mode-icons'."
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
