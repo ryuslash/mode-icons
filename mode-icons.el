@@ -187,7 +187,7 @@ ICON-SPEC should be a specification from `mode-icons'."
 	    (setq mode-name (replace-regexp-in-string "^ " "" mode-name))
 	    (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
 					(mode-icons-propertize-mode mode-name icon-spec)))))))))
-  (force-mode-line-update t))
+  (force-mode-line-update))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
