@@ -1,0 +1,27 @@
+<div class="row">
+  {% for release in site.github.releases %}
+  {% unless release.draft %}
+  <div class="col-sm-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <a href="{{ site.baseurl }}/CHANGELOG.html#{{ release.tag_name }}">
+            {{ release.name }}
+            {% if release.prerelease %}
+            (Prerelease)
+            {% endif %}
+          </a>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <a class="btn btn-primary"
+           href="{{ release.tarball_url }}">Download .tar.gz</a>
+        <a class="btn btn-primary"
+           href="{{ release.zipball_url }}">Download .zip</a>
+      </div>
+    </div>
+  </div>
+  {% endunless %}
+  {% endfor %}
+</div>

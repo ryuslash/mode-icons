@@ -1,0 +1,12 @@
+<div class="row">
+  {% for contributor in site.github.contributors %}
+  <div class="col-sm-2 contributor">
+    <a href="{{ contributor.html_url }}">
+      <img src="{{ contributor.avatar_url }}"
+           alt="{{ contributor.login }}" />
+      <br/>
+      {{ contributor.login }}
+    </a>
+  </div>
+  {% endfor %}
+</div>

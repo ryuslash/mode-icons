@@ -1,0 +1,12 @@
+{
+  "name": "Mode icons",
+  "authors": [
+    "Tom Willemse <tom@ryuslash.org>"
+  ],
+  "description": "Show icons for modes",
+  "main": "index.html",
+  "moduleType": [],
+  "license": "GPLv3",
+  "homepage": "http://projects.ryuslash.org/mode-icons/",
+  "private": true
+}
