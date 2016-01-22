@@ -70,14 +70,15 @@ absolute path to ICON."
     ("XML" "xml" xpm)
     ("YAML" "yaml" xpm)
     ("YASnippet" "yas" xpm)
+    (" yas" "yas" xpm)
     )
-  "Icons for major modes.
+  "Icons for major and minor modes.
 
 Each specification is a list with the first element being the
 name of the major mode.  The second the name of the icon file,
 without the extension.  And the third being the type of icon.")
 
-(defun get-icon-display (icon type)
+(defun mode-icons-get-icon-display (icon type)
   "Get the value for the display property of ICON having TYPE.
 
 ICON should be a string naming the file of the icon, without its
@@ -87,29 +88,29 @@ the icon."
                     (concat icon "." (symbol-name type)))))
    `(image :type ,type :file ,icon-path :ascent center)))
 
-(defun propertize-mode (mode icon-spec)
+(defun mode-icons-propertize-mode (mode icon-spec)
   "Propertize MODE with ICON-SPEC.
 
 MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'."
   (propertize
-   mode 'display (get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))
+   mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))
 
-(defun get-mode-icon (mode)
+(defun mode-icons-get-mode-icon (mode)
   "Get the icon for MODE, if there is one."
   (let* ((mode-name (format-mode-line mode))
          (icon-spec (assoc mode-name mode-icons)))
     (if icon-spec
-        (propertize-mode mode-name icon-spec)
+        (mode-icons-propertize-mode mode-name icon-spec)
       mode-name)))
 
-(defun set-mode-icon (mode)
+(defun mode-icons-set-mode-icon (mode)
   "Set the icon for MODE."
-  (setq mode-name (get-mode-icon mode)))
+  (setq mode-name (mode-icons-get-mode-icon mode)))
 
-(defun set-current-mode-icon ()
+(defun mode-icons-set-current-mode-icon ()
   "Set the icon for the current major mode."
-  (set-mode-icon mode-name))
+  (mode-icons-set-mode-icon mode-name))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
@@ -117,9 +118,9 @@ ICON-SPEC should be a specification from `mode-icons'."
   :global t
   (if mode-icons-mode
       (progn
-        (add-hook 'after-change-major-mode-hook 'set-current-mode-icon)
-        (set-current-mode-icon))
-    (remove-hook 'after-change-major-mode-hook 'set-current-mode-icon)))
+        (add-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
+        (mode-icons-set-current-mode-icon))
+    (remove-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)))
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
