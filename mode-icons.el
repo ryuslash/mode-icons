@@ -1,4 +1,3 @@
-
 ;;; mode-icons.el --- Show icons for modes -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013  Tom Willemse
@@ -74,7 +73,8 @@ absolute path to ICON."
     ("YAML" "yaml" xpm)
     ("YASnippet" "yas" xpm)
     (" yas" "yas" xpm)
-    (" hs" "hs" xpm))
+    (" hs" "hs" xpm)
+    ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\)" nil nil))
   "Icons for major and minor modes.
 
 Each specificatioun is a list with the first element being the
@@ -86,6 +86,7 @@ without the extension.  And the third being the type of icon."
                  (string :tag "Icon Name")
                  (const :tag "Suppress" nil))
                 (choice
+                 (const :tag "text" nil)
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)
@@ -118,16 +119,13 @@ the icon."
            (member 'sml/pos-id-separator mode-line-format)
            (string-match-p "powerline" (prin1-to-string mode-line-format)))))
 
-(defun mode-icons-propertize-mode (mode icon-spec &optional extra-props)
+(defun mode-icons-propertize-mode (mode icon-spec)
   "Propertize MODE with ICON-SPEC.
 
 MODE should be a string, the name of the mode to propertize.
-ICON-SPEC should be a specification from `mode-icons'.
-EXTRA-PROPS should be a list of extra properties to apply to the text."
+ICON-SPEC should be a specification from `mode-icons'."
   (cond
    ((not (nth 1 icon-spec)) "")
-   ((and extra-props (mode-icons-need-update-p))
-    (eval `(propertize ,mode 'display ',(mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) ,@extra-props)))
    (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))))
 
 (defun mode-icons-get-icon-spec (mode)
@@ -204,12 +202,17 @@ EXTRA-PROPS should be a list of extra properties to apply to the text."
                 (push (copy-sequence minor) mode-icons-set-minor-mode-icon-alist))
             (setq mode-name (replace-regexp-in-string "^ " "" mode-name))
             (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
-                                        (mode-icons-propertize-mode mode-name icon-spec mode-icons-minor-mode-base-text-properties)))))))))
+                                        (mode-icons-propertize-mode mode-name icon-spec)))))))))
   (force-mode-line-update))
 
 (defun mode-icons--generate-minor-mode-list ()
   "Extracts all rich strings necessary for the minor mode list."
-  (split-string (format-mode-line minor-mode-alist)))
+  (delete "" (mapcar (lambda(mode)
+                       (let ((pm (eval `(propertize ,mode ,@mode-icons-minor-mode-base-text-properties))))
+                         (unless (string= pm "")
+                           (setq pm (concat " " pm)))
+                         pm))
+                     (split-string (format-mode-line minor-mode-alist)))))
 
 ;; Based on rich-minority by Artur Malabarba
 (defvar mode-icons--backup-construct nil)
