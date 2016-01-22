@@ -88,7 +88,7 @@ without the extension.  And the third being the type of icon."
 		(choice
 		 (const :tag "png" png)
 		 (const :tag "gif" gif)
-		 (const :tag "jpeg" jepg)
+		 (const :tag "jpeg" jpeg)
 		 (const :tag "xbm" xbm)
 		 (const :tag "xpm" xpm))))
   :group 'mode-icons)
