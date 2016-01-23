@@ -200,19 +200,19 @@ ICON-SPEC should be a specification from `mode-icons'."
           (when minor
             (or (assq (car mode) mode-icons-set-minor-mode-icon-alist)
                 (push (copy-sequence minor) mode-icons-set-minor-mode-icon-alist))
-            (setq mode-name (replace-regexp-in-string "^ " "" mode-name))
-            (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
-                                        (mode-icons-propertize-mode mode-name icon-spec)))))))))
+            (setq mode-name (replace-regexp-in-string "^ " "" mode-name)
+                  mode-name (mode-icons-propertize-mode mode-name icon-spec))
+            (if (string= "" mode-name)
+                (setcdr minor (list ""))
+              (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
+                                          mode-name)))))))))
   (force-mode-line-update))
 
 (defun mode-icons--generate-minor-mode-list ()
   "Extracts all rich strings necessary for the minor mode list."
-  (delete "" (mapcar (lambda(mode)
-                       (let ((pm (eval `(propertize ,mode ,@mode-icons-minor-mode-base-text-properties))))
-                         (unless (string= pm "")
-                           (setq pm (concat " " pm)))
-                         pm))
-                     (split-string (format-mode-line minor-mode-alist)))))
+  (delete " " (delete "" (mapcar (lambda(mode)
+                                   (concat " " (eval `(propertize ,mode ,@mode-icons-minor-mode-base-text-properties))))
+                                 (split-string (format-mode-line minor-mode-alist))))))
 
 ;; Based on rich-minority by Artur Malabarba
 (defvar mode-icons--backup-construct nil)
