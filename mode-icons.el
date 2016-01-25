@@ -102,6 +102,7 @@ absolute path to ICON."
     ("YASnippet" "yas" xpm)
     (" yas" "yas" xpm)
     (" hs" "hs" xpm)
+    ("Go" "go" xpm)
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\)" nil nil))
   "Icons for major and minor modes.
 
