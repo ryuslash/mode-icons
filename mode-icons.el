@@ -104,7 +104,10 @@ absolute path to ICON."
     (" yas" "yas" xpm)
     (" hs" "hs" xpm)
     ("Go" "go" xpm)
-    ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\)" nil nil))
+    (" Rbow" "rainbow" xpm)
+    ;; Diminished modes
+    ;; ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\)" nil nil)
+    )
   "Icons for major and minor modes.
 
 Each specificatioun is a list with the first element being the
