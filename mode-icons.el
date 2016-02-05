@@ -43,8 +43,16 @@ ICON should be a file name with extension.  The result is the
 absolute path to ICON."
   (concat mode-icons--directory "/icons/" icon))
 
+(defvar mode-icons-octicons-font
+  (find-font (font-spec :name "github-octicons")))
+
+(when mode-icons-octicons-font
+  (make-face 'mode-icons-octicons)
+  (set-face-attribute 'mode-icons-octicons nil
+                      :font mode-icons-octicons-font))
+
 (defcustom mode-icons
-  '(("CSS" "css" xpm)
+  `(("CSS" "css" xpm)
     ("Coffee" "coffee" xpm)
     ("Compilation" "compile" xpm)
     ("Emacs-Lisp" "emacs" xpm)
@@ -74,6 +82,7 @@ absolute path to ICON."
     ("YASnippet" "yas" xpm)
     (" yas" "yas" xpm)
     (" hs" "hs" xpm)
+    ("Markdown" ,(make-string 1 #xf0c9) octicons)
     ;; Diminished modes
     ;; ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\)" nil nil)
     )
@@ -89,13 +98,14 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Suppress" nil))
                 (choice
                  (const :tag "text" nil)
+                 (const :tag "Octicons" octicons)
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)
                  (const :tag "xbm" xbm)
                  (const :tag "xpm" xpm))))
   :group 'mode-icons)
-
+ 
 (defun mode-icons-get-icon-display (icon type)
   "Get the value for the display property of ICON having TYPE.
 
@@ -116,7 +126,7 @@ the icon."
 
 (defvar mode-icons-powerline-p nil)
 (defun mode-icons-need-update-p ()
-  "Determine if the mode-icons need an update"
+  "Determine if the mode-icons need an update."
   (not (or (and (boundp 'rich-minority-mode) rich-minority-mode)
            (member 'sml/pos-id-separator mode-line-format)
            (string-match-p "powerline" (prin1-to-string mode-line-format)))))
@@ -128,6 +138,13 @@ MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'."
   (cond
    ((not (nth 1 icon-spec)) "")
+   ((and mode-icons-octicons-font (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'octicons))
+    (message "Trying %s" (propertize mode 'display (nth 1 icon-spec) 'face 'mode-icons-octicons
+                'font 'mode-icons-octicons-font))
+    (propertize mode 'display (nth 1 icon-spec) 'face 'mode-icons-octicons
+                'font 'mode-icons-octicons-font))
+   ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
+    (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))
    (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))))
 
 (defun mode-icons-get-icon-spec (mode)
