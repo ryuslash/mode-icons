@@ -84,7 +84,7 @@ absolute path to ICON."
     (" hs" "hs" xpm)
     ("Markdown" ,(make-string 1 #xf0c9) octicons)
     ;; Diminished modes
-    ;; ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\)" nil nil)
+    ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\)" nil nil)
     )
   "Icons for major and minor modes.
 
