@@ -74,6 +74,7 @@ absolute path to ICON."
     ("Coffee" "coffee" xpm)
     ("Compilation" "compile" xpm)
     ("Emacs-Lisp" "emacs" xpm)
+    ("Lisp Interaction" "emacs" xpm)
     ("HTML" "html" xpm)
     ("Haml" "haml" xpm)
     ("Image[imagemagick]" "svg" xpm)
