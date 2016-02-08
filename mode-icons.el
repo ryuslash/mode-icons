@@ -46,10 +46,6 @@ absolute path to ICON."
 (defvar mode-icons-octicons-font
   (find-font (font-spec :name "github-octicons")))
 
-(when mode-icons-octicons-font
-  (make-face 'mode-icons-octicons)
-  (set-face-attribute 'mode-icons-octicons nil
-                      :font mode-icons-octicons-font))
 
 (defcustom mode-icons
   `(("CSS" "css" xpm)
@@ -117,10 +113,18 @@ the icon."
     `(image :type ,type :file ,icon-path :ascent center)))
 
 (defcustom mode-icons-minor-mode-base-text-properties
-  '('help-echo 'rm--help-echo
+  '('help-echo nil
                'mouse-face 'mode-line-highlight
                'local-map mode-line-minor-mode-keymap)
   "List of text propeties to apply to every minor mode."
+  :type '(repeat sexp)
+  :group 'mode-icons)
+
+(defcustom mode-icons-major-mode-base-text-properties
+  '('help-echo "Major mode\nmouse-1: Display major mode menu\nmouse-2: Show help for major mode\nmouse-3: Toggle minor modes"
+               'mouse-face 'mode-line-highlight
+               'local-map mode-line-major-mode-keymap)
+  "List of text propeties to apply to every major mode."
   :type '(repeat sexp)
   :group 'mode-icons)
 
@@ -139,9 +143,7 @@ ICON-SPEC should be a specification from `mode-icons'."
   (cond
    ((not (nth 1 icon-spec)) "")
    ((and mode-icons-octicons-font (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'octicons))
-    (message "Trying %s" (propertize mode 'display (nth 1 icon-spec) 'face 'mode-icons-octicons
-                'font 'mode-icons-octicons-font))
-    (propertize mode 'display (nth 1 icon-spec) 'face 'mode-icons-octicons
+    (propertize mode 'display (nth 1 icon-spec)
                 'font 'mode-icons-octicons-font))
    ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
     (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))
@@ -227,6 +229,10 @@ ICON-SPEC should be a specification from `mode-icons'."
                                           mode-name)))))))))
   (force-mode-line-update))
 
+(defun mode-icons--generate-major-mode-item ()
+  "Give rich strings needed for `major-mode' viewing."
+  (eval `(propertize ,mode-name ,@mode-icons-major-mode-base-text-properties)))
+
 (defun mode-icons--generate-minor-mode-list ()
   "Extracts all rich strings necessary for the minor mode list."
   (delete " " (delete "" (mapcar (lambda(mode)
@@ -239,6 +245,11 @@ ICON-SPEC should be a specification from `mode-icons'."
   '(:eval (mode-icons--generate-minor-mode-list))
   "Construct used to replace `minor-mode-alist'.")
 
+(defvar mode-icons--major-backup-construct nil)
+(defvar mode-icons--major-construct
+  '(:eval (mode-icons--generate-major-mode-item))
+  "Construct used to replace `mode-name'.")
+
 (defun mode-icons-fix (&optional enable)
   "Fix mode-icons."
   (if enable
@@ -247,13 +258,25 @@ ICON-SPEC should be a specification from `mode-icons'."
                         (lambda (x) (and (listp x)
                                     (equal (car x) :propertize)
                                     (equal (cadr x) '("" minor-mode-alist))))
-                        mode-line-modes))))
+                        mode-line-modes)))
+            (place-major (cl-member-if
+                          (lambda(x)
+                            (and (listp x)
+                                 (equal (car x) :propertize)
+                                 (equal (cadr x) '("" mode-name))))
+                          mode-line-modes)))
         (when place
           (setq mode-icons--backup-construct (car place))
-          (setcar place mode-icons--mode-line-construct)))
-    (let ((place (member mode-icons--mode-line-construct mode-line-modes)))
+          (setcar place mode-icons--mode-line-construct))
+        (when place-major
+          (setq mode-icons--major-backup-construct (car place-major))
+          (setcar place-major mode-icons--major-construct)))
+    (let ((place (member mode-icons--mode-line-construct mode-line-modes))
+          (place-major (member mode-icons--major-backup-construct mode-line-modes)))
       (when place
-        (setcar place mode-icons--backup-construct)))))
+        (setcar place mode-icons--backup-construct))
+      (when place-major
+        (setcar place-major mode-icons--major-backup-construct)))))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
