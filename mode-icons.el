@@ -139,6 +139,7 @@ the icon."
 (defun mode-icons-supported-p (icon-spec)
   "Determine if ICON-SPEC is suppored on your system."
   (or
+   (and (or (eq (nth 2 icon-spec) nil) (eq (nth 1 icon-spec) nil)) t)
    (and (eq (nth 2 icon-spec) 'octicons) mode-icons-octicons-font (not (eq system-type 'windows-nt))
 	(stringp (nth 1 icon-spec)))
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
