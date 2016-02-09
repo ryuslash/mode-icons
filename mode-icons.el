@@ -6,6 +6,7 @@
 ;; Keywords: multimedia
 ;; Version: 0.1.0
 ;; URL: http://ryuslash.org/projects/mode-icons.html
+;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -51,6 +52,9 @@
 ;;     (mode-icons-mode)
 
 ;;; Code:
+
+(require 'cl-lib)
+
 (defgroup mode-icons nil
   "Provide icons for major modes."
   :group 'editing-basics
