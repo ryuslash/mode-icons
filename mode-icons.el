@@ -141,16 +141,22 @@ the icon."
 MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'."
   (cond
-   ((not (nth 1 icon-spec)) "")
+   ((get-text-property 0 'mode-icons-p mode)
+    mode)
+   ((not (nth 1 icon-spec))
+    "")
    ((and mode-icons-octicons-font (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'octicons))
     (propertize mode 'display (nth 1 icon-spec)
-                'font 'mode-icons-octicons-font))
+                'font 'mode-icons-octicons-font
+                'mode-icons-p t))
    ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
-    (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))
-   (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))))))
+    (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
+                'mode-icons-p t))
+   (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
+                  'mode-icons-p t))))
 
 (defun mode-icons-get-icon-spec (mode)
-  "Get icon spec based on regular expression."
+  "Get icon spec for MODE based on regular expression."
   (catch 'found-mode
     (dolist (item mode-icons)
       (when (string-match-p (car item) mode)
