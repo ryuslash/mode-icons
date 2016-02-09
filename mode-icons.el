@@ -136,7 +136,7 @@ the icon."
            (member 'sml/pos-id-separator mode-line-format)
            (string-match-p "powerline" (prin1-to-string mode-line-format)))))
 
-(defvar mode-icons-supported-p (icon-spec)
+(defun mode-icons-supported-p (icon-spec)
   "Determine if ICON-SPEC is suppored on your system."
   (or
    (and (eq (nth 2 icon-spec) 'octicons) mode-icons-octicons-font (not (eq system-type 'windows-nt))
