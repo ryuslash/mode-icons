@@ -98,6 +98,7 @@ without the extension.  And the third being the type of icon."
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)
+		 (const :tag "jpg" jpg)
                  (const :tag "xbm" xbm)
                  (const :tag "xpm" xpm))))
   :group 'mode-icons)
@@ -110,7 +111,7 @@ extension.  Type should be a symbol designating the file type for
 the icon."
   (let ((icon-path (mode-icons-get-icon-file
                     (concat icon "." (symbol-name type)))))
-    `(image :type ,type :file ,icon-path :ascent center)))
+    `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center)))
 
 (defcustom mode-icons-minor-mode-base-text-properties
   '('help-echo nil
@@ -135,6 +136,14 @@ the icon."
            (member 'sml/pos-id-separator mode-line-format)
            (string-match-p "powerline" (prin1-to-string mode-line-format)))))
 
+(defvar mode-icons-supported-p (icon-spec)
+  "Determine if ICON-SPEC is suppored on your system."
+  (or
+   (and (eq (nth 2 icon-spec) 'octicons) mode-icons-octicons-font (not (eq system-type 'windows-nt))
+	(stringp (nth 1 icon-spec)))
+   (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
+   (and (image-type-available-p (nth 2 icon-spec)))))
+
 (defun mode-icons-propertize-mode (mode icon-spec)
   "Propertize MODE with ICON-SPEC.
 
@@ -145,7 +154,8 @@ ICON-SPEC should be a specification from `mode-icons'."
     mode)
    ((not (nth 1 icon-spec))
     "")
-   ((and mode-icons-octicons-font (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'octicons))
+   ((and mode-icons-octicons-font (not (eq system-type 'windows-nt))
+	 (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'octicons))
     (propertize mode 'display (nth 1 icon-spec)
                 'font 'mode-icons-octicons-font
                 'mode-icons-p t))
@@ -159,7 +169,8 @@ ICON-SPEC should be a specification from `mode-icons'."
   "Get icon spec for MODE based on regular expression."
   (catch 'found-mode
     (dolist (item mode-icons)
-      (when (string-match-p (car item) mode)
+      (when (and (mode-icons-supported-p item)
+		 (string-match-p (car item) mode))
         (throw 'found-mode item)))
     nil))
 
