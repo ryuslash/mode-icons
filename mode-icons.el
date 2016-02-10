@@ -92,6 +92,7 @@ absolute path to ICON."
     (" Pulls" ,(make-string 1 #xf092) FontAwesome)
     ("Zip-Archive" ,(make-string 1 #xf1c6) FontAwesome)
     ("ARev" ,(make-string 1 #xf021) FontAwesome)
+    ("Calculator" ,(make-string 1 #xf1ec) FontAwesome)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil))
   "Icons for major and minor modes.
