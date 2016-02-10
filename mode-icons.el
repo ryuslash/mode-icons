@@ -43,9 +43,15 @@ ICON should be a file name with extension.  The result is the
 absolute path to ICON."
   (concat mode-icons--directory "/icons/" icon))
 
-(defvar mode-icons-octicons-font
-  (find-font (font-spec :name "github-octicons")))
+(defmacro mode-icons-define-font (font)
+  "Define FONT for `mode-icons'."
+  `(progn
+     (defvar ,(intern (format "mode-icons-font-spec-%s" font))
+       (font-spec :name ,(format "%s" font)))
+     (defvar ,(intern (format "mode-icons-font-%s" font))
+       (find-font ,(intern (format "mode-icons-font-spec-%s" font))))))
 
+(mode-icons-define-font "github-octicons")
 
 (defcustom mode-icons
   `(("CSS" "css" xpm)
@@ -78,7 +84,7 @@ absolute path to ICON."
     ("YASnippet" "yas" xpm)
     (" yas" "yas" xpm)
     (" hs" "hs" xpm)
-    ("Markdown" ,(make-string 1 #xf0c9) octicons)
+    ("Markdown" ,(make-string 1 #xf0c9) github-octicons)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\)" nil nil)
     )
@@ -94,7 +100,7 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Suppress" nil))
                 (choice
                  (const :tag "text" nil)
-                 (const :tag "Octicons" octicons)
+                 (const :tag "Octicons" github-octicons)
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)
@@ -136,12 +142,37 @@ the icon."
            (member 'sml/pos-id-separator mode-line-format)
            (string-match-p "powerline" (prin1-to-string mode-line-format)))))
 
+(defvar mode-icons-font-register-alist nil
+  "Alist of characters supported.")
+
+(defun mode-icons-supported-font-p (char font &optional dont-register)
+  "Determine if the CHAR is supported in FONT.
+When DONT-REGISTER is non-nil, don't register the font.
+Otherwise, under windows 32, emacs register the font for use in
+the mode-line."
+  (when (and (or (integerp char)
+                 (and (stringp char) (= 1 (length char))))
+             (boundp (intern (format "mode-icons-font-spec-%s" font)))
+             (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
+    (if (not (eq system-type 'windows-nt)) 'direct-font
+      (let* ((char (or (and (integerp char) char)
+                       (and (stringp char) (= 1 (length char))
+                            (aref (vconcat char) 0))))
+             (found-char-p (assoc char mode-icons-font-register-alist))
+             (char-font-p (and found-char-p (eq (cdr found-char-p) font))))
+        (cond
+         (char-font-p t)
+         (found-char-p t)
+         (t ;; not yet registered.
+          (set-fontset-font t (cons char char) (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
+          (push (cons char font) mode-icons-font-register-alist)
+          t))))))
+
 (defun mode-icons-supported-p (icon-spec)
   "Determine if ICON-SPEC is suppored on your system."
   (or
    (and (or (eq (nth 2 icon-spec) nil) (eq (nth 1 icon-spec) nil)) t)
-   (and (eq (nth 2 icon-spec) 'octicons) mode-icons-octicons-font (not (eq system-type 'windows-nt))
-	(stringp (nth 1 icon-spec)))
+   (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec) t)
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (image-type-available-p (nth 2 icon-spec)))))
 
@@ -150,21 +181,23 @@ the icon."
 
 MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'."
-  (cond
-   ((get-text-property 0 'mode-icons-p mode)
-    mode)
-   ((not (nth 1 icon-spec))
-    "")
-   ((and mode-icons-octicons-font (not (eq system-type 'windows-nt))
-	 (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'octicons))
-    (propertize mode 'display (nth 1 icon-spec)
-                'font 'mode-icons-octicons-font
-                'mode-icons-p t))
-   ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
-    (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
-                'mode-icons-p t))
-   (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
-                  'mode-icons-p t))))
+  (let (tmp)
+    (cond
+     ((get-text-property 0 'mode-icons-p mode)
+      mode)
+     ((not (nth 1 icon-spec))
+      "")
+     ((setq tmp (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec)))
+      (if (eq 'direct-font tmp)
+          (propertize mode 'display (nth 1 icon-spec)
+                   'font (symbol-value (intern (format "mode-icons-font-%s" font)))
+                   'mode-icons-p t)
+        (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)))
+     ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
+      (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
+                  'mode-icons-p t))
+     (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
+                    'mode-icons-p t)))))
 
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec for MODE based on regular expression."
