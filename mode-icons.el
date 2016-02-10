@@ -52,6 +52,7 @@ absolute path to ICON."
        (find-font ,(intern (format "mode-icons-font-spec-%s" font))))))
 
 (mode-icons-define-font "github-octicons")
+(mode-icons-define-font "font-mfizz")
 
 (defcustom mode-icons
   `(("CSS" "css" xpm)
@@ -85,6 +86,7 @@ absolute path to ICON."
     (" yas" "yas" xpm)
     (" hs" "hs" xpm)
     ("Markdown" ,(make-string 1 #xf0c9) github-octicons)
+    ("Scala" ,(make-string 1 #xf15b) font-mfizz)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\)" nil nil)
     )
@@ -101,6 +103,7 @@ without the extension.  And the third being the type of icon."
                 (choice
                  (const :tag "text" nil)
                  (const :tag "Octicons" github-octicons)
+                 (const :tag "Fizzed" font-mfizz)
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)
