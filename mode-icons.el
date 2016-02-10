@@ -93,8 +93,7 @@ absolute path to ICON."
     ("Zip-Archive" ,(make-string 1 #xf1c6) FontAwesome)
     ("ARev" ,(make-string 1 #xf021) FontAwesome)
     ;; Diminished modes
-    ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\)" nil nil)
-    )
+    ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil))
   "Icons for major and minor modes.
 
 Each specificatioun is a list with the first element being the
