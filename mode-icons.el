@@ -91,6 +91,7 @@ absolute path to ICON."
     ("Magit" ,(make-string 1 #xf1d2) FontAwesome)
     (" Pulls" ,(make-string 1 #xf092) FontAwesome)
     ("Zip-Archive" ,(make-string 1 #xf1c6) FontAwesome)
+    ("ARev" ,(make-string 1 #xf021) FontAwesome)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\)" nil nil)
     )
