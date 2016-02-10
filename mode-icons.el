@@ -109,6 +109,7 @@ without the extension.  And the third being the type of icon."
                  (const :tag "text" nil)
                  (const :tag "Octicons" github-octicons)
                  (const :tag "Fizzed" font-mfizz)
+                 (const :tag "Font Awesome" FontAwesome)
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)
