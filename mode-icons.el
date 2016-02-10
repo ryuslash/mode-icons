@@ -92,7 +92,10 @@ absolute path to ICON."
     (" Pulls" ,(make-string 1 #xf092) FontAwesome)
     ("Zip-Archive" ,(make-string 1 #xf1c6) FontAwesome)
     ("ARev" ,(make-string 1 #xf021) FontAwesome)
-    ("Calculator" ,(make-string 1 #xf1ec) FontAwesome)
+    ("Calc\\(ulator\\)?" ,(make-string 1 #xf1ec) FontAwesome)
+    ("Debug.*" ,(make-string 1 #xf188) FontAwesome)
+    ("Calendar" ,(make-string 1 #xf073) FontAwesome)
+    ("C/l" ,(make-string 1 #xf107) font-mfizz)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil))
   "Icons for major and minor modes.
@@ -185,7 +188,6 @@ the mode-line."
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (image-type-available-p (nth 2 icon-spec)))))
 
-(defvar mode-icons-propertize-mode nil)
 (defun mode-icons-propertize-mode (mode icon-spec)
   "Propertize MODE with ICON-SPEC.
 
@@ -197,17 +199,15 @@ ICON-SPEC should be a specification from `mode-icons'."
       mode)
      ((not (nth 1 icon-spec))
       "")
-     
      ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
       (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
                   'mode-icons-p t))
      ((setq tmp (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec)))
       (if (eq 'direct-font tmp)
-          (eval `(propertize ,mode 'display ,(nth 1 icon-spec)
-                             'font ,(symbol-value (intern (format "mode-icons-font-%s" font)))
-                             'mode-icons-p t ,@mode-icons-propertize-mode))
-        (eval `(propertize ,mode 'display ,(nth 1 icon-spec) 'mode-icons-p t
-                           ,@mode-icons-propertize-mode))))
+          (propertize mode 'display (nth 1 icon-spec)
+                             'font (symbol-value (intern (format "mode-icons-font-%s" font)))
+                             'mode-icons-p t)
+        (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)))
      (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t)))))
 
 (defun mode-icons-get-icon-spec (mode)
@@ -253,13 +253,12 @@ ICON-SPEC should be a specification from `mode-icons'."
 
 (defun mode-icons-set-current-mode-icon ()
   "Set the icon for the current major mode."
-  (setq mode-icons-propertize-mode
-        mode-icons-major-mode-base-text-properties)
   (mode-icons-set-mode-icon mode-name))
 
 (defvar mode-icons-set-minor-mode-icon-alist nil)
 
 (defun mode-icons-set-minor-mode-icon-undo ()
+  "Undo minor modes."
   (let (minor)
     (dolist (mode mode-icons-set-minor-mode-icon-alist)
       (setq minor (assq (car mode) minor-mode-alist))
@@ -275,8 +274,6 @@ ICON-SPEC should be a specification from `mode-icons'."
 
 (defun mode-icons-set-minor-mode-icon ()
   "Set the icon for the minor modes."
-  (setq mode-icons-propertize-mode
-        mode-icons-minor-mode-base-text-properties)
   (let (icon-spec mode-name minor)
     (dolist (mode minor-mode-alist)
       (unless (assq (car mode) mode-icons-set-minor-mode-icon-alist)
