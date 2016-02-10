@@ -53,6 +53,7 @@ absolute path to ICON."
 
 (mode-icons-define-font "github-octicons")
 (mode-icons-define-font "font-mfizz")
+(mode-icons-define-font "FontAwesome")
 
 (defcustom mode-icons
   `(("CSS" "css" xpm)
@@ -87,6 +88,9 @@ absolute path to ICON."
     (" hs" "hs" xpm)
     ("Markdown" ,(make-string 1 #xf0c9) github-octicons)
     ("Scala" ,(make-string 1 #xf15b) font-mfizz)
+    ("Magit" ,(make-string 1 #xf1d2) FontAwesome)
+    (" Pulls" ,(make-string 1 #xf092) FontAwesome)
+    ("Zip-Archive" ,(make-string 1 #xf1c6) FontAwesome)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\)" nil nil)
     )
@@ -151,7 +155,7 @@ the icon."
 (defun mode-icons-supported-font-p (char font &optional dont-register)
   "Determine if the CHAR is supported in FONT.
 When DONT-REGISTER is non-nil, don't register the font.
-Otherwise, under windows 32, emacs register the font for use in
+Otherwise, under windows 32, register the font for use in
 the mode-line."
   (when (and (or (integerp char)
                  (and (stringp char) (= 1 (length char))))
@@ -179,6 +183,7 @@ the mode-line."
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (image-type-available-p (nth 2 icon-spec)))))
 
+(defvar mode-icons-propertize-mode nil)
 (defun mode-icons-propertize-mode (mode icon-spec)
   "Propertize MODE with ICON-SPEC.
 
@@ -190,17 +195,18 @@ ICON-SPEC should be a specification from `mode-icons'."
       mode)
      ((not (nth 1 icon-spec))
       "")
-     ((setq tmp (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec)))
-      (if (eq 'direct-font tmp)
-          (propertize mode 'display (nth 1 icon-spec)
-                   'font (symbol-value (intern (format "mode-icons-font-%s" font)))
-                   'mode-icons-p t)
-        (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)))
+     
      ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
       (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
                   'mode-icons-p t))
-     (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
-                    'mode-icons-p t)))))
+     ((setq tmp (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec)))
+      (if (eq 'direct-font tmp)
+          (eval `(propertize ,mode 'display ,(nth 1 icon-spec)
+                             'font ,(symbol-value (intern (format "mode-icons-font-%s" font)))
+                             'mode-icons-p t ,@mode-icons-propertize-mode))
+        (eval `(propertize ,mode 'display ,(nth 1 icon-spec) 'mode-icons-p t
+                           ,@mode-icons-propertize-mode))))
+     (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t)))))
 
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec for MODE based on regular expression."
@@ -245,6 +251,8 @@ ICON-SPEC should be a specification from `mode-icons'."
 
 (defun mode-icons-set-current-mode-icon ()
   "Set the icon for the current major mode."
+  (setq mode-icons-propertize-mode
+        mode-icons-major-mode-base-text-properties)
   (mode-icons-set-mode-icon mode-name))
 
 (defvar mode-icons-set-minor-mode-icon-alist nil)
@@ -265,6 +273,8 @@ ICON-SPEC should be a specification from `mode-icons'."
 
 (defun mode-icons-set-minor-mode-icon ()
   "Set the icon for the minor modes."
+  (setq mode-icons-propertize-mode
+        mode-icons-minor-mode-base-text-properties)
   (let (icon-spec mode-name minor)
     (dolist (mode minor-mode-alist)
       (unless (assq (car mode) mode-icons-set-minor-mode-icon-alist)
