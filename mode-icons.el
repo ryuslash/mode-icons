@@ -131,10 +131,12 @@ absolute path to ICON."
     ("Help" ,(make-string 1 #xf059) FontAwesome)
     ("WoMan" ,(make-string 1 #xf05a) FontAwesome)
     ("C/l" ,(make-string 1 #xf107) font-mfizz)
+    ("Custom" ,(make-string 1 #xf013) FontAwesome)
     ("\\`Go\\'" "go" xpm)
     (" Rbow" "rainbow" xpm)
     ;; Diminished modes
-    ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil))
+    ;; ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
+    )
   "Icons for major and minor modes.
 
 Each specificatioun is a list with the first element being the
