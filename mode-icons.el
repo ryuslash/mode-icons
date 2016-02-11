@@ -129,7 +129,7 @@ absolute path to ICON."
     ("Debug.*" ,(make-string 1 #xf188) FontAwesome)
     ("Calendar" ,(make-string 1 #xf073) FontAwesome)
     ("C/l" ,(make-string 1 #xf107) font-mfizz)
-    ("Go" "go" xpm)
+    ("\\`Go\\'" "go" xpm)
     (" Rbow" "rainbow" xpm)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil))
