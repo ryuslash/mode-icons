@@ -134,8 +134,9 @@ absolute path to ICON."
     ("Custom" ,(make-string 1 #xf013) FontAwesome)
     ("\\`Go\\'" "go" xpm)
     (" Rbow" "rainbow" xpm)
+    (" Golden" "golden" xpm) ;; Icon created by Arthur Shlain from Noun Project
     ;; Diminished modes
-    ;; ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
+    ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
   "Icons for major and minor modes.
 
