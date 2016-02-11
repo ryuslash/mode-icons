@@ -129,6 +129,7 @@ absolute path to ICON."
     ("Debug.*" ,(make-string 1 #xf188) FontAwesome)
     ("Calendar" ,(make-string 1 #xf073) FontAwesome)
     ("Help" ,(make-string 1 #xf059) FontAwesome)
+    ("WoMan" ,(make-string 1 #xf05a) FontAwesome)
     ("C/l" ,(make-string 1 #xf107) font-mfizz)
     ("\\`Go\\'" "go" xpm)
     (" Rbow" "rainbow" xpm)
