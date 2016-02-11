@@ -160,25 +160,24 @@ the icon."
 (defun mode-icons-supported-font-p (char font &optional dont-register)
   "Determine if the CHAR is supported in FONT.
 When DONT-REGISTER is non-nil, don't register the font.
-Otherwise, under windows 32, register the font for use in
-the mode-line."
+Otherwise, register the font for use in the mode-line and
+everywhere else."
   (when (and (or (integerp char)
                  (and (stringp char) (= 1 (length char))))
              (boundp (intern (format "mode-icons-font-spec-%s" font)))
              (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
-    (if (not (eq system-type 'windows-nt)) 'direct-font
-      (let* ((char (or (and (integerp char) char)
-                       (and (stringp char) (= 1 (length char))
-                            (aref (vconcat char) 0))))
-             (found-char-p (assoc char mode-icons-font-register-alist))
-             (char-font-p (and found-char-p (eq (cdr found-char-p) font))))
-        (cond
-         (char-font-p t)
-         (found-char-p t)
-         (t ;; not yet registered.
-          (set-fontset-font t (cons char char) (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
-          (push (cons char font) mode-icons-font-register-alist)
-          t))))))
+    (let* ((char (or (and (integerp char) char)
+                     (and (stringp char) (= 1 (length char))
+                          (aref (vconcat char) 0))))
+           (found-char-p (assoc char mode-icons-font-register-alist))
+           (char-font-p (and found-char-p (eq (cdr found-char-p) font))))
+      (cond
+       (char-font-p t)
+       (found-char-p t)
+       (t ;; not yet registered.
+        (set-fontset-font t (cons char char) (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
+        (push (cons char font) mode-icons-font-register-alist)
+        t)))))
 
 (defun mode-icons-supported-p (icon-spec)
   "Determine if ICON-SPEC is suppored on your system."
@@ -202,12 +201,14 @@ ICON-SPEC should be a specification from `mode-icons'."
      ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
       (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
                   'mode-icons-p t))
-     ((setq tmp (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec)))
-      (if (eq 'direct-font tmp)
-          (propertize mode 'display (nth 1 icon-spec)
-                             'font (symbol-value (intern (format "mode-icons-font-%s" font)))
-                             'mode-icons-p t)
-        (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)))
+     ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+      ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
+      ;; Use `compose-region' because it allows clicable text.
+      (with-temp-buffer
+        (insert mode)
+        (compose-region (point-min) (point-max) (nth 1 icon-spec))
+        (put-text-property (point-min) (point-max) 'mode-icons-p t)
+        (buffer-string)))
      (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t)))))
 
 (defun mode-icons-get-icon-spec (mode)
@@ -238,7 +239,7 @@ ICON-SPEC should be a specification from `mode-icons'."
     (setq mode-name (mode-icons-get-mode-icon mode))))
 
 (defun mode-icons-major-mode-icons-undo ()
-  "Undo the mode-name changes"
+  "Undo the `mode-name' icons."
   (dolist (b (buffer-list))
     (with-current-buffer b
       (when mode-icons-cached-mode-name
@@ -246,7 +247,7 @@ ICON-SPEC should be a specification from `mode-icons'."
               mode-icons-cached-mode-name nil)))))
 
 (defun mode-icons-major-mode-icons ()
-  "Apply mode name changes on all buffers."
+  "Apply mode name icons on all buffers."
   (dolist (b (buffer-list))
     (with-current-buffer b
       (mode-icons-set-current-mode-icon))))
