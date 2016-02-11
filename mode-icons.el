@@ -128,6 +128,7 @@ absolute path to ICON."
     ("Calc\\(ulator\\)?" ,(make-string 1 #xf1ec) FontAwesome)
     ("Debug.*" ,(make-string 1 #xf188) FontAwesome)
     ("Calendar" ,(make-string 1 #xf073) FontAwesome)
+    ("Help" ,(make-string 1 #xf059) FontAwesome)
     ("C/l" ,(make-string 1 #xf107) font-mfizz)
     ("\\`Go\\'" "go" xpm)
     (" Rbow" "rainbow" xpm)
