@@ -6,6 +6,7 @@
 ;; Keywords: multimedia
 ;; Version: 0.1.0
 ;; URL: http://ryuslash.org/projects/mode-icons.html
+;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -22,9 +23,38 @@
 
 ;;; Commentary:
 
+;; This package provides a globalized minor mode that replaces the
+;; major mode name in your mode-line and places like Ibuffer with an
+;; icon.  Currently the following programming modes are supported,
+;; along with some other modes:
 ;;
+;; - CSS
+;; - Coffee
+;; - Emacs-Lisp
+;; - HTML
+;; - Haml
+;; - JavaScript
+;; - Lisp
+;; - nXML
+;; - PHP
+;; - Python
+;; - Ruby
+;; - Sass/Scss
+;; - Scheme
+;; - Shell-script
+;; - Slim
+;; - Snippet
+;; - Web
+;; - Yaml
+;;
+;; To enable this minor mode add the following line to your init file:
+;;
+;;     (mode-icons-mode)
 
 ;;; Code:
+
+(require 'cl-lib)
+
 (defgroup mode-icons nil
   "Provide icons for major modes."
   :group 'editing-basics
@@ -60,6 +90,7 @@ absolute path to ICON."
     ("Coffee" "coffee" xpm)
     ("Compilation" "compile" xpm)
     ("Emacs-Lisp" "emacs" xpm)
+    ("Lisp Interaction" "emacs" xpm)
     ("HTML" "html" xpm)
     ("Haml" "haml" xpm)
     ("Image[imagemagick]" "svg" xpm)
@@ -69,6 +100,7 @@ absolute path to ICON."
     ("nXML" "xml" xpm)
     ("Org" "org" xpm)
     ("PHP" "php" xpm)
+    ("PHP/l" "php" xpm)
     ("Projectile Rails Server" "rails" xpm)
     ("Python" "python" xpm)
     ("Ruby" "ruby" xpm)
@@ -79,6 +111,7 @@ absolute path to ICON."
     ("Scheme" "scheme" xpm)
     ("Shell-script" "bash" xpm)
     ("Slim" "slim" xpm)
+    ("Snippet" "yas" xpm)
     ("Term" "term" xpm)
     ("Web" "html" xpm)
     ("XML" "xml" xpm)
@@ -96,6 +129,8 @@ absolute path to ICON."
     ("Debug.*" ,(make-string 1 #xf188) FontAwesome)
     ("Calendar" ,(make-string 1 #xf073) FontAwesome)
     ("C/l" ,(make-string 1 #xf107) font-mfizz)
+    ("Go" "go" xpm)
+    (" Rbow" "rainbow" xpm)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Golden\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil))
   "Icons for major and minor modes.
