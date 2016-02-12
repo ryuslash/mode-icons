@@ -145,6 +145,7 @@ absolute path to ICON."
     ("Java/l" #xf12b font-mfizz)
     ("C?Perl" #xf148 font-mfizz)
     ("Octave" "octave" xpm)
+    ("AHK" "autohotkey" xpm)
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
