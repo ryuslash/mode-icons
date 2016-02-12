@@ -137,6 +137,13 @@ absolute path to ICON."
     (" Golden" "golden" xpm) ;; Icon created by Arthur Shlain from Noun Project
     ("BibTeX" "bibtex" xpm)
     ("C[+][+]/l" #xf10c font-mfizz)
+    ("C[#]/l" #xf10d font-mfizz)
+    ("Elixir" #xf115 font-mfizz)
+    ("Erlang" #xf116 font-mfizz)
+    ("Haskell" #xf126 font-mfizz)
+    ("Clojure" #xf10a font-mfizz)
+    ("Java/l" #xf12b font-mfizz)
+    ("C?Perl" #xf148 font-mfizz)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
