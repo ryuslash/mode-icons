@@ -135,6 +135,7 @@ absolute path to ICON."
     ("\\`Go\\'" "go" xpm)
     (" Rbow" "rainbow" xpm)
     (" Golden" "golden" xpm) ;; Icon created by Arthur Shlain from Noun Project
+    ("BibTeX" "bibtex" xpm)
     ;; Diminished modes
     ("\\(ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
