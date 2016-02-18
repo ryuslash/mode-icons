@@ -149,6 +149,7 @@ absolute path to ICON."
     ("C?Perl" #xf148 font-mfizz)
     ("Octave" "octave" xpm)
     ("AHK" "autohotkey" xpm)
+    ("Info" #xf05a FontAwesome)
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
