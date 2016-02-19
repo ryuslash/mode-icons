@@ -150,6 +150,7 @@ absolute path to ICON."
     ("Octave" "octave" xpm)
     ("AHK" "autohotkey" xpm)
     ("Info" #xf05a FontAwesome)
+    ("Narrow" #xf066 FontAwesome) 
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
@@ -200,6 +201,16 @@ the icon."
                'mouse-face 'mode-line-highlight
                'local-map mode-line-major-mode-keymap)
   "List of text propeties to apply to every major mode."
+  :type '(repeat sexp)
+  :group 'mode-icons)
+
+(defcustom mode-icons-narrow-text-properties
+  '('local-map
+    '(keymap
+      (mode-line keymap
+                 (mouse-2 . mode-line-widen)))
+    'mouse-face 'mode-line-highlight 'help-echo "mouse-2: Remove narrowing from buffer")
+  "List of text propeties to apply to narrowing buffer indicator."
   :type '(repeat sexp)
   :group 'mode-icons)
 
@@ -361,6 +372,17 @@ ICON-SPEC should be a specification from `mode-icons'."
                                    (concat " " (eval `(propertize ,mode ,@mode-icons-minor-mode-base-text-properties))))
                                  (split-string (format-mode-line minor-mode-alist))))))
 
+(defun mode-icons--generate-narrow ()
+  "Extracts all rich strings necessary for narrow indicator."
+  (let (icon-spec)
+    (delete " " (delete "" (mapcar (lambda(mode)
+                                     (concat " " (eval `(propertize
+                                                         ,(if (setq icon-spec (mode-icons-get-icon-spec mode))
+                                                              (mode-icons-propertize-mode mode icon-spec)
+                                                            mode)
+                                                         ,@mode-icons-narrow-text-properties))))
+                                   (split-string (format-mode-line "%n")))))))
+
 ;; Based on rich-minority by Artur Malabarba
 (defvar mode-icons--backup-construct nil)
 (defvar mode-icons--mode-line-construct
@@ -371,6 +393,11 @@ ICON-SPEC should be a specification from `mode-icons'."
 (defvar mode-icons--major-construct
   '(:eval (mode-icons--generate-major-mode-item))
   "Construct used to replace `mode-name'.")
+
+(defvar mode-icons--narrow-backup-construct nil)
+(defvar mode-icons--narrow-construct
+  '(:eval (mode-icons--generate-narrow))
+  "Construct used to replace %n in `mode-line-modes'.")
 
 (defun mode-icons-fix (&optional enable)
   "Fix mode-icons."
@@ -386,19 +413,29 @@ ICON-SPEC should be a specification from `mode-icons'."
                             (and (listp x)
                                  (equal (car x) :propertize)
                                  (equal (cadr x) '("" mode-name))))
-                          mode-line-modes)))
+                          mode-line-modes))
+            (place-narrow (cl-member-if
+                           (lambda(x)
+                             (and (stringp x) (string= "%n" x)))
+                           mode-line-modes)))
         (when place
           (setq mode-icons--backup-construct (car place))
           (setcar place mode-icons--mode-line-construct))
         (when place-major
           (setq mode-icons--major-backup-construct (car place-major))
-          (setcar place-major mode-icons--major-construct)))
+          (setcar place-major mode-icons--major-construct))
+        (when place-narrow
+          (setq mode-icons--narrow-backup-construct (car place-narrow))
+          (setcar place-narrow mode-icons--narrow-construct)))
     (let ((place (member mode-icons--mode-line-construct mode-line-modes))
-          (place-major (member mode-icons--major-backup-construct mode-line-modes)))
+          (place-major (member mode-icons--major-backup-construct mode-line-modes))
+          (place-narrow (member mode-icons--narrow-backup-construct mode-line-modes)))
       (when place
         (setcar place mode-icons--backup-construct))
       (when place-major
-        (setcar place-major mode-icons--major-backup-construct)))))
+        (setcar place-major mode-icons--major-backup-construct))
+      (when place-narrow
+        (setcar place-narrow mode-icons--narrow-backup-construct)))))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
