@@ -194,6 +194,10 @@ This was stole/modified from `c-save-buffer-state'"
     (writable #xf09c FontAwesome)
     (save #xf0c7 FontAwesome)
     (saved " " nil)
+    (apple #xf179 FontAwesome)
+    (win #xf17a FontAwesome)
+    ;; FIXME: use lsb_release to determine Linux variant and choose appropriate icon
+    (unix #xf166 font-mfizz) ;; Use ubuntu, since I think it is the most common.
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
@@ -206,7 +210,12 @@ without the extension.  And the third being the type of icon."
           (list (choice
                  (string :tag "Regular Expression")
                  (const :tag "Read Only Indicator" read-only)
-                 (const :tag "Writable Indicator" writable))
+                 (const :tag "Writable Indicator" writable)
+                 (const :tag "Saved" saved)
+                 (const :tag "Save" save)
+                 (const :tag "Apple" apple)
+                 (const :tag "Windows" win)
+                 (const :tag "Unix" unix))
                 (choice
                  (string :tag "Icon Name")
                  (integer :tag "Font Glyph Code")
@@ -548,6 +557,35 @@ ICON-SPEC should be a specification from `mode-icons'."
   '(:eval (mode-icons--modified-status))
   "Construct used to replace %1+ in `mode-line-modified'.")
 
+(defvar mode-icons--backup-eol-construct nil)
+(defvar mode-icons--eol-construct
+  '(:eval (mode-icons--mode-line-eol-desc))
+  "End of Line Construct.")
+
+(defun mode-icons--mode-line-eol-desc (&optional string)
+  "Modify `mode-line-eol-desc' to have icons.
+STRING is the string to modify, or if absent, the value from `mode-line-eol-desc'."
+  (let* ((str (or string (mode-line-eol-desc)))
+         (props (text-properties-at 0 str))
+         icon-spec)
+    (setq str (cond
+               ((string= "(Unix)" str)
+                (if (setq icon-spec (mode-icons-get-icon-spec 'unix))
+                    (mode-icons-propertize-mode 'unix icon-spec)
+                  str))
+               ((or (string= str "(DOS)")
+                    (string= str "\\"))
+                (if (setq icon-spec (mode-icons-get-icon-spec 'win))
+                    (mode-icons-propertize-mode 'win icon-spec)
+                  str))
+               ((string= str "(Mac)")
+                (if (setq icon-spec (mode-icons-get-icon-spec 'apple))
+                    (mode-icons-propertize-mode 'apple icon-spec)
+                  str))
+               (t str)))
+    (add-text-properties 0 (length str) props str)
+    str))
+
 
 (defun mode-icons-fix (&optional enable)
   "Fix mode-icons."
@@ -573,9 +611,15 @@ ICON-SPEC should be a specification from `mode-icons'."
                          (and (stringp x) (string-match-p "%[0-9]*[*]" x)))
                        mode-line-modified))
             (place-mod (cl-member-if
-                       (lambda(x)
-                         (and (stringp x) (string-match-p "%[0-9]*[+]" x)))
-                       mode-line-modified)))
+                        (lambda(x)
+                          (and (stringp x) (string-match-p "%[0-9]*[+]" x)))
+                        mode-line-modified))
+            (place-eol (cl-member-if
+                        (lambda(x)
+                          (and (listp x)
+                               (equal (car x) :eval)
+                               (eq (caadr x) 'mode-line-eol-desc)))
+                        mode-line-mule-info)))
         (when place
           (setq mode-icons--backup-construct (car place))
           (setcar place mode-icons--mode-line-construct))
@@ -590,12 +634,16 @@ ICON-SPEC should be a specification from `mode-icons'."
           (setcar place-ro mode-icons--read-only-construct))
         (when place-mod
           (setq mode-icons--modified-backup-construct (car place-mod))
-          (setcar place-mod mode-icons--modified-construct)))
+          (setcar place-mod mode-icons--modified-construct))
+        (when place-eol
+          (setq mode-icons--backup-eol-construct (car place-eol))
+          (setcar place-eol mode-icons--eol-construct)))
     (let ((place (member mode-icons--mode-line-construct mode-line-modes))
-          (place-major (member mode-icons--major-backup-construct mode-line-modes))
-          (place-narrow (member mode-icons--narrow-backup-construct mode-line-modes))
-          (place-ro (member mode-icons--read-only-backup-construct mode-line-modified))
-          (place-mod (member mode-icons--modified-backup-construct mode-line-modified)))
+          (place-major (member mode-icons--major-construct mode-line-modes))
+          (place-narrow (member mode-icons--narrow-construct mode-line-modes))
+          (place-ro (member mode-icons--read-only-construct mode-line-modified))
+          (place-mod (member mode-icons--modified-construct mode-line-modified))
+          (place-eol (member mode-icons--eol-construct mode-line-mule-info)))
       (when place
         (setcar place mode-icons--backup-construct))
       (when place-major
@@ -605,7 +653,9 @@ ICON-SPEC should be a specification from `mode-icons'."
       (when place-ro
         (setcar place-ro mode-icons--read-only-backup-construct))
       (when place-mod 
-        (setcar place-mod mode-icons--modified-backup-construct)))))
+        (setcar place-mod mode-icons--modified-backup-construct))
+      (when place-eol
+        (setcar place-eol mode-icons--backup-eol-construct)))))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
