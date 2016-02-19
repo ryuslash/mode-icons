@@ -287,7 +287,7 @@ the icon."
 Use EVENT to determine location."
   (interactive "e")
   (with-selected-window (posn-window (event-start event))
-    (save-buffer (current-buffer))
+    (call-interactively (key-binding (where-is-internal 'save-buffer global-map t)))
     (force-mode-line-update)))
 
 (defun mode-icons-modified-help-echo (window _object _point)
