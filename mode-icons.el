@@ -73,6 +73,45 @@ ICON should be a file name with extension.  The result is the
 absolute path to ICON."
   (concat mode-icons--directory "/icons/" icon))
 
+(defmacro mode-icons-save-buffer-state (&rest body)
+  "Eval BODY,
+then restore the buffer state under the assumption that no significant
+modification has been made in BODY.  A change is considered
+significant if it affects the buffer text in any way that isn't
+completely restored again.  Changes in text properties like `face' or
+`syntax-table' are considered insignificant.  This macro allows text
+properties to be changed, even in a read-only buffer.
+
+This macro should be placed around all calculations which set
+\"insignificant\" text properties in a buffer, even when the buffer is
+known to be writeable.  That way, these text properties remain set
+even if the user undoes the command which set them.
+
+This macro should ALWAYS be placed around \"temporary\" internal buffer
+changes \(like adding a newline to calculate a text-property then
+deleting it again\), so that the user never sees them on his
+`buffer-undo-list'.  
+
+However, any user-visible changes to the buffer \(like auto-newlines\)
+must not be within a `ergoemacs-save-buffer-state', since the user then
+wouldn't be able to undo them.
+
+The return value is the value of the last form in BODY.
+
+This was stole/modified from `c-save-buffer-state'"
+  `(let* ((modified (buffer-modified-p)) (buffer-undo-list t)
+          (inhibit-read-only t) (inhibit-point-motion-hooks t)
+          before-change-functions after-change-functions
+          deactivate-mark
+          buffer-file-name buffer-file-truename ; Prevent primitives checking
+                                        ; for file modification
+          )
+     (unwind-protect
+         (progn ,@body)
+       (and (not modified)
+            (buffer-modified-p)
+            (set-buffer-modified-p nil)))))
+
 (defmacro mode-icons-define-font (font)
   "Define FONT for `mode-icons'."
   `(progn
@@ -153,6 +192,8 @@ absolute path to ICON."
     ("Narrow" #xf066 FontAwesome)
     (read-only #xf023 FontAwesome)
     (writable #xf09c FontAwesome)
+    (save #xf0c7 FontAwesome)
+    (saved " " nil)
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
@@ -229,6 +270,41 @@ the icon."
   :type '(repeat sexp)
   :group 'mode-icons)
 
+(defcustom mode-icons-modified-text-properties
+  '('mouse-face 'mode-line-highlight
+		'local-map
+		'(keymap
+		  (mode-line keymap
+			     (mouse-1 . mode-icons-save-buffer)
+			     (mouse-3 . mode-line-toggle-modified)))
+		'help-echo 'mode-icons-modified-help-echo)
+  "List of text propeties to apply to read-only buffer indicator."
+  :type '(repeat sexp)
+  :group 'mode-icons)
+
+(defun mode-icons-save-buffer (event)
+  "Save buffer from mode line.
+Use EVENT to determine location."
+  (interactive "e")
+  (with-selected-window (posn-window (event-start event))
+    (save-buffer (current-buffer))
+    (force-mode-line-update)))
+
+(defun mode-icons-modified-help-echo (window _object _point)
+  "Return help text specifying WINDOW's buffer modification status."
+  (format "Buffer is %smodified\nmouse-1: Save Buffer\nmouse-3: Toggle modification state"
+	  (if (buffer-modified-p (window-buffer window)) "" "not ")))
+
+(defcustom mode-icons-read-only-text-properties
+  '('mouse-face 'mode-line-highlight 'local-map
+                '(keymap
+                  (mode-line keymap
+                             (mouse-1 . mode-line-toggle-read-only)))
+                'help-echo 'mode-line-read-only-help-echo)
+  "List of text propeties to apply to read-only buffer indicator."
+  :type '(repeat sexp)
+  :group 'mode-icons)
+
 (defvar mode-icons-powerline-p nil)
 (defun mode-icons-need-update-p ()
   "Determine if the mode-icons need an update."
@@ -274,30 +350,31 @@ everywhere else."
 
 MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'."
-  (let (tmp)
-    (cond
-     ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
-      mode)
-     ((not (nth 1 icon-spec))
-      "")
-     ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
-      (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
-                  'mode-icons-p t))
-     ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
-      ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
-      ;; Use `compose-region' because it allows clicable text.
-      (with-temp-buffer
-        (if (stringp mode)
-            (insert mode)
-          (insert (or (and (integerp (nth 1 icon-spec))
-                                                         (make-string 1 (nth 1 icon-spec)))
-                                                    (nth 1 icon-spec))))
-        (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
-                                                         (make-string 1 (nth 1 icon-spec)))
-                                                    (nth 1 icon-spec)))
-        (put-text-property (point-min) (point-max) 'mode-icons-p t)
-        (buffer-string)))
-     (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t)))))
+  (mode-icons-save-buffer-state ;; Otherwise may cause issues with trasient mark mode
+   (let (tmp)
+     (cond
+      ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
+       mode)
+      ((not (nth 1 icon-spec))
+       "")
+      ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
+       (propertize (nth 1 icon-spec) 'display (nth 1 icon-spec)
+		   'mode-icons-p t))
+      ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+       ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
+       ;; Use `compose-region' because it allows clicable text.
+       (with-temp-buffer
+	 (if (stringp mode)
+	     (insert mode)
+	   (insert (or (and (integerp (nth 1 icon-spec))
+			    (make-string 1 (nth 1 icon-spec)))
+		       (nth 1 icon-spec))))
+	 (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
+							  (make-string 1 (nth 1 icon-spec)))
+						     (nth 1 icon-spec)))
+	 (put-text-property (point-min) (point-max) 'mode-icons-p t)
+	 (buffer-string)))
+      (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t))))))
 
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec for MODE based on regular expression."
@@ -427,6 +504,22 @@ ICON-SPEC should be a specification from `mode-icons'."
                  ro))))
           ,@mode-icons-read-only-text-properties)))
 
+(defun mode-icons--modified-status ()
+  "Get modified status icon."
+  (eval `(propertize
+          ,(let ((mod (format-mode-line "%1+"))
+                 icon-spec)
+             (cond
+              ((string= "*" mod)
+               (if (setq icon-spec (mode-icons-get-icon-spec 'save))
+                   (mode-icons-propertize-mode 'save icon-spec)
+                 mod))
+              (t
+               (if (setq icon-spec (mode-icons-get-icon-spec 'saved))
+                   (mode-icons-propertize-mode 'saved icon-spec)
+                 mod))))
+          ,@mode-icons-modified-text-properties)))
+
 ;; Based on rich-minority by Artur Malabarba
 (defvar mode-icons--backup-construct nil)
 (defvar mode-icons--mode-line-construct
@@ -448,6 +541,12 @@ ICON-SPEC should be a specification from `mode-icons'."
 (defvar mode-icons--read-only-construct
   '(:eval (mode-icons--read-only-status))
   "Construct used to replace %1* in `mode-line-modified'.")
+
+
+(defvar mode-icons--modified-backup-construct nil)
+(defvar mode-icons--modified-construct
+  '(:eval (mode-icons--modified-status))
+  "Construct used to replace %1+ in `mode-line-modified'.")
 
 
 (defun mode-icons-fix (&optional enable)
@@ -472,6 +571,10 @@ ICON-SPEC should be a specification from `mode-icons'."
             (place-ro (cl-member-if
                        (lambda(x)
                          (and (stringp x) (string-match-p "%[0-9]*[*]" x)))
+                       mode-line-modified))
+            (place-mod (cl-member-if
+                       (lambda(x)
+                         (and (stringp x) (string-match-p "%[0-9]*[+]" x)))
                        mode-line-modified)))
         (when place
           (setq mode-icons--backup-construct (car place))
@@ -484,11 +587,15 @@ ICON-SPEC should be a specification from `mode-icons'."
           (setcar place-narrow mode-icons--narrow-construct))
         (when place-ro
           (setq mode-icons--read-only-backup-construct (car place-ro))
-          (setcar place-ro mode-icons--read-only-construct)))
+          (setcar place-ro mode-icons--read-only-construct))
+        (when place-mod
+          (setq mode-icons--modified-backup-construct (car place-mod))
+          (setcar place-mod mode-icons--modified-construct)))
     (let ((place (member mode-icons--mode-line-construct mode-line-modes))
           (place-major (member mode-icons--major-backup-construct mode-line-modes))
           (place-narrow (member mode-icons--narrow-backup-construct mode-line-modes))
-          (place-ro (member mode-icons--read-only-backup-construct mode-line-modified)))
+          (place-ro (member mode-icons--read-only-backup-construct mode-line-modified))
+          (place-mod (member mode-icons--modified-backup-construct mode-line-modified)))
       (when place
         (setcar place mode-icons--backup-construct))
       (when place-major
@@ -496,7 +603,9 @@ ICON-SPEC should be a specification from `mode-icons'."
       (when place-narrow
         (setcar place-narrow mode-icons--narrow-backup-construct))
       (when place-ro
-        (setcar place-ro mode-icons--narrow-backup-construct)))))
+        (setcar place-ro mode-icons--read-only-backup-construct))
+      (when place-mod 
+        (setcar place-mod mode-icons--modified-backup-construct)))))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
