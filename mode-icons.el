@@ -150,7 +150,9 @@ absolute path to ICON."
     ("Octave" "octave" xpm)
     ("AHK" "autohotkey" xpm)
     ("Info" #xf05a FontAwesome)
-    ("Narrow" #xf066 FontAwesome) 
+    ("Narrow" #xf066 FontAwesome)
+    (read-only #xf023 FontAwesome)
+    (writable #xf09c FontAwesome)
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
@@ -160,7 +162,10 @@ Each specificatioun is a list with the first element being the
 name of the major mode.  The second the name of the icon file,
 without the extension.  And the third being the type of icon."
   :type '(repeat
-          (list (string :tag "Regular Expression")
+          (list (choice
+                 (string :tag "Regular Expression")
+                 (const :tag "Read Only Indicator" read-only)
+                 (const :tag "Writable Indicator" writable))
                 (choice
                  (string :tag "Icon Name")
                  (integer :tag "Font Glyph Code")
@@ -214,6 +219,16 @@ the icon."
   :type '(repeat sexp)
   :group 'mode-icons)
 
+(defcustom mode-icons-read-only-text-properties
+  '('mouse-face 'mode-line-highlight 'local-map
+                '(keymap
+                  (mode-line keymap
+                             (mouse-1 . mode-line-toggle-read-only)))
+                'help-echo 'mode-line-read-only-help-echo)
+  "List of text propeties to apply to read-only buffer indicator."
+  :type '(repeat sexp)
+  :group 'mode-icons)
+
 (defvar mode-icons-powerline-p nil)
 (defun mode-icons-need-update-p ()
   "Determine if the mode-icons need an update."
@@ -261,31 +276,43 @@ MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'."
   (let (tmp)
     (cond
-     ((get-text-property 0 'mode-icons-p mode)
+     ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
       mode)
      ((not (nth 1 icon-spec))
       "")
      ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
-      (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
+      (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec))
                   'mode-icons-p t))
      ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
       ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
       ;; Use `compose-region' because it allows clicable text.
       (with-temp-buffer
-        (insert mode)
+        (if (stringp mode)
+            (insert mode)
+          (insert (or (and (integerp (nth 1 icon-spec))
+                                                         (make-string 1 (nth 1 icon-spec)))
+                                                    (nth 1 icon-spec))))
         (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
                                                          (make-string 1 (nth 1 icon-spec)))
                                                     (nth 1 icon-spec)))
         (put-text-property (point-min) (point-max) 'mode-icons-p t)
         (buffer-string)))
-     (t (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t)))))
+     (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t)))))
 
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec for MODE based on regular expression."
   (catch 'found-mode
     (dolist (item mode-icons)
       (when (and (mode-icons-supported-p item)
-		 (string-match-p (car item) mode))
+                 (or
+                  (and
+                   (stringp (car item))
+                   (stringp mode)
+                   (string-match-p (car item) mode))
+                  (and
+                   (symbolp (car item))
+                   (symbolp mode)
+                   (eq mode (car item)))))
         (throw 'found-mode item)))
     nil))
 
@@ -383,6 +410,23 @@ ICON-SPEC should be a specification from `mode-icons'."
                                                          ,@mode-icons-narrow-text-properties))))
                                    (split-string (format-mode-line "%n")))))))
 
+
+(defun mode-icons--read-only-status ()
+  "Get Read Only Status icon."
+  (eval `(propertize
+          ,(let ((ro (format-mode-line "%1*"))
+                 icon-spec)
+             (cond
+              ((string= "%" ro)
+               (if (setq icon-spec (mode-icons-get-icon-spec 'read-only))
+                   (mode-icons-propertize-mode 'read-only icon-spec)
+                 ro))
+              (t
+               (if (setq icon-spec (mode-icons-get-icon-spec 'writable))
+                   (mode-icons-propertize-mode 'writable icon-spec)
+                 ro))))
+          ,@mode-icons-read-only-text-properties)))
+
 ;; Based on rich-minority by Artur Malabarba
 (defvar mode-icons--backup-construct nil)
 (defvar mode-icons--mode-line-construct
@@ -398,6 +442,13 @@ ICON-SPEC should be a specification from `mode-icons'."
 (defvar mode-icons--narrow-construct
   '(:eval (mode-icons--generate-narrow))
   "Construct used to replace %n in `mode-line-modes'.")
+
+
+(defvar mode-icons--read-only-backup-construct nil)
+(defvar mode-icons--read-only-construct
+  '(:eval (mode-icons--read-only-status))
+  "Construct used to replace %1* in `mode-line-modified'.")
+
 
 (defun mode-icons-fix (&optional enable)
   "Fix mode-icons."
@@ -417,7 +468,11 @@ ICON-SPEC should be a specification from `mode-icons'."
             (place-narrow (cl-member-if
                            (lambda(x)
                              (and (stringp x) (string= "%n" x)))
-                           mode-line-modes)))
+                           mode-line-modes))
+            (place-ro (cl-member-if
+                       (lambda(x)
+                         (and (stringp x) (string-match-p "%[0-9]*[*]" x)))
+                       mode-line-modified)))
         (when place
           (setq mode-icons--backup-construct (car place))
           (setcar place mode-icons--mode-line-construct))
@@ -426,16 +481,22 @@ ICON-SPEC should be a specification from `mode-icons'."
           (setcar place-major mode-icons--major-construct))
         (when place-narrow
           (setq mode-icons--narrow-backup-construct (car place-narrow))
-          (setcar place-narrow mode-icons--narrow-construct)))
+          (setcar place-narrow mode-icons--narrow-construct))
+        (when place-ro
+          (setq mode-icons--read-only-backup-construct (car place-ro))
+          (setcar place-ro mode-icons--read-only-construct)))
     (let ((place (member mode-icons--mode-line-construct mode-line-modes))
           (place-major (member mode-icons--major-backup-construct mode-line-modes))
-          (place-narrow (member mode-icons--narrow-backup-construct mode-line-modes)))
+          (place-narrow (member mode-icons--narrow-backup-construct mode-line-modes))
+          (place-ro (member mode-icons--read-only-backup-construct mode-line-modified)))
       (when place
         (setcar place mode-icons--backup-construct))
       (when place-major
         (setcar place-major mode-icons--major-backup-construct))
       (when place-narrow
-        (setcar place-narrow mode-icons--narrow-backup-construct)))))
+        (setcar place-narrow mode-icons--narrow-backup-construct))
+      (when place-ro
+        (setcar place-ro mode-icons--narrow-backup-construct)))))
 
 ;;;###autoload
 (define-minor-mode mode-icons-mode
