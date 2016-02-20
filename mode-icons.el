@@ -193,11 +193,12 @@ This was stole/modified from `c-save-buffer-state'"
     (read-only #xf023 FontAwesome)
     (writable #xf09c FontAwesome)
     (save #xf0c7 FontAwesome)
-    (saved " " nil)
+    (saved "" nil)
     (apple #xf179 FontAwesome)
     (win #xf17a FontAwesome)
     ;; FIXME: use lsb_release to determine Linux variant and choose appropriate icon
     (unix #xf166 font-mfizz) ;; Use ubuntu, since I think it is the most common.
+    ("Text\\'" #xf0f6 FontAwesome)
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
@@ -497,36 +498,53 @@ ICON-SPEC should be a specification from `mode-icons'."
                                    (split-string (format-mode-line "%n")))))))
 
 
+(defcustom mode-icons-read-only-space t
+  "Add Space after read-only icon."
+  :type 'boolean
+  :group 'mode-icons)
+
 (defun mode-icons--read-only-status ()
   "Get Read Only Status icon."
   (eval `(propertize
           ,(let ((ro (format-mode-line "%1*"))
                  icon-spec)
-             (cond
-              ((string= "%" ro)
-               (if (setq icon-spec (mode-icons-get-icon-spec 'read-only))
-                   (mode-icons-propertize-mode 'read-only icon-spec)
-                 ro))
-              (t
-               (if (setq icon-spec (mode-icons-get-icon-spec 'writable))
-                   (mode-icons-propertize-mode 'writable icon-spec)
-                 ro))))
+             (setq ro (cond
+                       ((string= "%" ro)
+                        (if (setq icon-spec (mode-icons-get-icon-spec 'read-only))
+                            (mode-icons-propertize-mode 'read-only icon-spec)
+                          ro))
+                       (t
+                        (if (setq icon-spec (mode-icons-get-icon-spec 'writable))
+                            (mode-icons-propertize-mode 'writable icon-spec)
+                          ro))))
+             (when (and mode-icons-read-only-space
+                        (not (string= ro "")))
+               (setq ro (concat ro " ")))
+             ro)
           ,@mode-icons-read-only-text-properties)))
+
+(defcustom mode-icons-modified-status-space t
+  "Add Space to modified status."
+  :type 'boolean
+  :group 'mode-icons)
 
 (defun mode-icons--modified-status ()
   "Get modified status icon."
   (eval `(propertize
           ,(let ((mod (format-mode-line "%1+"))
                  icon-spec)
-             (cond
-              ((string= "*" mod)
-               (if (setq icon-spec (mode-icons-get-icon-spec 'save))
-                   (mode-icons-propertize-mode 'save icon-spec)
-                 mod))
-              (t
-               (if (setq icon-spec (mode-icons-get-icon-spec 'saved))
-                   (mode-icons-propertize-mode 'saved icon-spec)
-                 mod))))
+             (setq mod (cond
+                        ((string= "*" mod)
+                         (if (setq icon-spec (mode-icons-get-icon-spec 'save))
+                             (mode-icons-propertize-mode 'save icon-spec)
+                           mod))
+                        (t
+                         (if (setq icon-spec (mode-icons-get-icon-spec 'saved))
+                             (mode-icons-propertize-mode 'saved icon-spec)
+                           mod))))
+             (when (and mode-icons-modified-status-space
+                        (not (string= mod "")))
+               (setq mod (concat mod " "))))
           ,@mode-icons-modified-text-properties)))
 
 ;; Based on rich-minority by Artur Malabarba
@@ -562,27 +580,49 @@ ICON-SPEC should be a specification from `mode-icons'."
   '(:eval (mode-icons--mode-line-eol-desc))
   "End of Line Construct.")
 
+(defcustom mode-icons-eol-space t
+  "Add a space to the end of line specification."
+  :type 'boolean
+  :group 'mode-icons)
+
+(defcustom mode-icons-eol-text nil
+  "Describe end of line type
+\(Unix) -> LF
+\(DOS) -> CRLF
+\(Mac) -> CR"
+  :type 'boolean
+  :group 'mode-icons)
+
 (defun mode-icons--mode-line-eol-desc (&optional string)
   "Modify `mode-line-eol-desc' to have icons.
 STRING is the string to modify, or if absent, the value from `mode-line-eol-desc'."
   (let* ((str (or string (mode-line-eol-desc)))
          (props (text-properties-at 0 str))
+         lt2
          icon-spec)
     (setq str (cond
                ((string= "(Unix)" str)
+                (setq lt2 " LF")
                 (if (setq icon-spec (mode-icons-get-icon-spec 'unix))
                     (mode-icons-propertize-mode 'unix icon-spec)
                   str))
                ((or (string= str "(DOS)")
                     (string= str "\\"))
+                (setq lt2 " CRLF")
                 (if (setq icon-spec (mode-icons-get-icon-spec 'win))
                     (mode-icons-propertize-mode 'win icon-spec)
                   str))
                ((string= str "(Mac)")
+                (setq lt2 " CR")
                 (if (setq icon-spec (mode-icons-get-icon-spec 'apple))
                     (mode-icons-propertize-mode 'apple icon-spec)
                   str))
                (t str)))
+    (when mode-icons-eol-text
+      (setq str (concat str lt2)))
+    (when (and mode-icons-eol-space
+               (not (string= "" str)))
+      (setq str (concat str " ")))
     (add-text-properties 0 (length str) props str)
     str))
 
