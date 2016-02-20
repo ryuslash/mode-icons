@@ -198,6 +198,7 @@ This was stole/modified from `c-save-buffer-state'"
     (win #xf17a FontAwesome)
     ;; FIXME: use lsb_release to determine Linux variant and choose appropriate icon
     (unix #xf166 font-mfizz) ;; Use ubuntu, since I think it is the most common.
+    (undecided #xf128 FontAwesome)
     ("Text\\'" #xf0f6 FontAwesome)
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
@@ -605,7 +606,7 @@ ICON-SPEC should be a specification from `mode-icons'."
 STRING is the string to modify, or if absent, the value from `mode-line-eol-desc'."
   (let* ((str (or string (mode-line-eol-desc)))
          (props (text-properties-at 0 str))
-         lt2
+         (lt2 "")
          icon-spec)
     (setq str (cond
                ((string= "(Unix)" str)
@@ -623,6 +624,11 @@ STRING is the string to modify, or if absent, the value from `mode-line-eol-desc
                 (setq lt2 " CR")
                 (if (setq icon-spec (mode-icons-get-icon-spec 'apple))
                     (mode-icons-propertize-mode 'apple icon-spec)
+                  str))
+	       ((string= str ":")
+		(setq lt2 " Undecided")
+		(if (setq icon-spec (mode-icons-get-icon-spec 'undecided))
+                    (mode-icons-propertize-mode 'undecided icon-spec)
                   str))
                (t str)))
     (when mode-icons-eol-text
