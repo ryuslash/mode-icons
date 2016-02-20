@@ -403,12 +403,19 @@ ICON-SPEC should be a specification from `mode-icons'."
         (throw 'found-mode item)))
     nil))
 
+(defcustom mode-icons-show-mode-name nil
+  "Show Icon and `mode-name'."
+  :type 'boolean
+  :group 'mode-icons)
+
 (defun mode-icons-get-mode-icon (mode)
   "Get the icon for MODE, if there is one."
   (let* ((mode-name (format-mode-line mode))
          (icon-spec (mode-icons-get-icon-spec mode-name)))
     (if icon-spec
-        (mode-icons-propertize-mode mode-name icon-spec)
+        (if mode-icons-show-mode-name
+            (concat (mode-icons-propertize-mode mode-name icon-spec) " " mode-name)
+          (mode-icons-propertize-mode mode-name icon-spec))
       mode-name)))
 
 (defvar mode-icons-cached-mode-name nil
