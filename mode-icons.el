@@ -91,7 +91,7 @@ even if the user undoes the command which set them.
 This macro should ALWAYS be placed around \"temporary\" internal buffer
 changes \(like adding a newline to calculate a text-property then
 deleting it again\), so that the user never sees them on his
-`buffer-undo-list'.  
+`buffer-undo-list'.
 
 However, any user-visible changes to the buffer \(like auto-newlines\)
 must not be within a `ergoemacs-save-buffer-state', since the user then
@@ -235,7 +235,7 @@ without the extension.  And the third being the type of icon."
                  (const :tag "xbm" xbm)
                  (const :tag "xpm" xpm))))
   :group 'mode-icons)
- 
+
 (defun mode-icons-get-icon-display (icon type)
   "Get the value for the display property of ICON having TYPE.
 
@@ -706,7 +706,7 @@ STRING is the string to modify, or if absent, the value from `mode-line-eol-desc
         (setcar place-narrow mode-icons--narrow-backup-construct))
       (when place-ro
         (setcar place-ro mode-icons--read-only-backup-construct))
-      (when place-mod 
+      (when place-mod
         (setcar place-mod mode-icons--modified-backup-construct))
       (when place-eol
         (setcar place-eol mode-icons--backup-eol-construct)))))
