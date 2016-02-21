@@ -231,7 +231,7 @@ without the extension.  And the third being the type of icon."
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)
-		 (const :tag "jpg" jpg)
+                 (const :tag "jpg" jpg)
                  (const :tag "xbm" xbm)
                  (const :tag "xpm" xpm))))
   :group 'mode-icons)
@@ -284,12 +284,12 @@ the icon."
 
 (defcustom mode-icons-modified-text-properties
   '('mouse-face 'mode-line-highlight
-		'local-map
-		'(keymap
-		  (mode-line keymap
-			     (mouse-1 . mode-icons-save-buffer)
-			     (mouse-3 . mode-line-toggle-modified)))
-		'help-echo 'mode-icons-modified-help-echo)
+                'local-map
+                '(keymap
+                  (mode-line keymap
+                             (mouse-1 . mode-icons-save-buffer)
+                             (mouse-3 . mode-line-toggle-modified)))
+                'help-echo 'mode-icons-modified-help-echo)
   "List of text propeties to apply to read-only buffer indicator."
   :type '(repeat sexp)
   :group 'mode-icons)
@@ -305,7 +305,7 @@ Use EVENT to determine location."
 (defun mode-icons-modified-help-echo (window _object _point)
   "Return help text specifying WINDOW's buffer modification status."
   (format "Buffer is %smodified\nmouse-1: Save Buffer\nmouse-3: Toggle modification state"
-	  (if (buffer-modified-p (window-buffer window)) "" "not ")))
+          (if (buffer-modified-p (window-buffer window)) "" "not ")))
 
 (defcustom mode-icons-read-only-text-properties
   '('mouse-face 'mode-line-highlight 'local-map
@@ -371,21 +371,21 @@ ICON-SPEC should be a specification from `mode-icons'."
        "")
       ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
        (propertize (nth 1 icon-spec) 'display (nth 1 icon-spec)
-		   'mode-icons-p t))
+                   'mode-icons-p t))
       ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
        ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
        ;; Use `compose-region' because it allows clicable text.
        (with-temp-buffer
-	 (if (stringp mode)
-	     (insert mode)
-	   (insert (or (and (integerp (nth 1 icon-spec))
-			    (make-string 1 (nth 1 icon-spec)))
-		       (nth 1 icon-spec))))
-	 (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
-							  (make-string 1 (nth 1 icon-spec)))
-						     (nth 1 icon-spec)))
-	 (put-text-property (point-min) (point-max) 'mode-icons-p t)
-	 (buffer-string)))
+         (if (stringp mode)
+             (insert mode)
+           (insert (or (and (integerp (nth 1 icon-spec))
+                            (make-string 1 (nth 1 icon-spec)))
+                       (nth 1 icon-spec))))
+         (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
+                                                          (make-string 1 (nth 1 icon-spec)))
+                                                     (nth 1 icon-spec)))
+         (put-text-property (point-min) (point-max) 'mode-icons-p t)
+         (buffer-string)))
       (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t))))))
 
 (defun mode-icons-get-icon-spec (mode)
@@ -626,9 +626,9 @@ STRING is the string to modify, or if absent, the value from `mode-line-eol-desc
                 (if (setq icon-spec (mode-icons-get-icon-spec 'apple))
                     (mode-icons-propertize-mode 'apple icon-spec)
                   str))
-	       ((string= str ":")
-		(setq lt2 " Undecided")
-		(if (setq icon-spec (mode-icons-get-icon-spec 'undecided))
+               ((string= str ":")
+                (setq lt2 " Undecided")
+                (if (setq icon-spec (mode-icons-get-icon-spec 'undecided))
                     (mode-icons-propertize-mode 'undecided icon-spec)
                   str))
                (t str)))
