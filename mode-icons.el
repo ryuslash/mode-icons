@@ -27,7 +27,7 @@
 ;; This package provides a globalized minor mode that replaces the
 ;; major mode name in your mode-line and places like Ibuffer with an
 ;; icon.  Currently the following programming modes are supported,
-;; along with some other modes:
+;; among others:
 ;;
 ;; - CSS
 ;; - Coffee
@@ -51,6 +51,17 @@
 ;; To enable this minor mode add the following line to your init file:
 ;;
 ;;     (mode-icons-mode)
+;;
+;; As of version 0.3.0 this project includes some icons which use icon
+;; fonts instead of images.  These fonts are:
+;;
+;; - Font Awesome, found at URL `http://fontawesome.io/'.
+;; - GitHub Octicons, found at URL `https://octicons.github.com/'.
+;; - Font Mfizz, found at URL `http://fizzed.com/oss/font-mfizz'.
+;;
+;; You should have these installed if you want to use these icons,
+;; otherwise you may get strange glyphs in your mode-line instead of
+;; an icon.
 
 ;;; Code:
 
