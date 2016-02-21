@@ -1,6 +1,7 @@
 ;;; mode-icons.el --- Show icons for modes -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013  Tom Willemse
+;; Copyright (C) 2013, 2016  Tom Willemse
+;;               2016  Matthew L. Fidler
 
 ;; Author: Tom Willemse <tom@ryuslash.org>
 ;; Keywords: multimedia
