@@ -5,7 +5,7 @@
 
 ;; Author: Tom Willemse <tom@ryuslash.org>
 ;; Keywords: multimedia
-;; Version: 0.2.1
+;; Version: 0.3.0
 ;; URL: http://ryuslash.org/projects/mode-icons.html
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
