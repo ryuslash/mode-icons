@@ -6,7 +6,7 @@ Show icons instead of mode names in emacs.
 
 [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/screenshots/screenshot01.png]]
 
-Modes that have icons instead of names now:
+Some of the modes that have icons instead of names now:
 
 | Modes      | icon                                                                     |
 |------------+--------------------------------------------------------------------------|
@@ -28,7 +28,19 @@ Modes that have icons instead of names now:
 | Slim       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/slim.png]]   |
 | YAML       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/yaml.png]]   |
 
+* Requirements
 
+  As of version 0.3.0 you can also use icons from some icon fonts,
+  specifically:
+
+  - [[http://fontawesome.io/][Font Awesome]]
+  - [[https://octicons.github.com/][GitHub Octicons]]
+  - [[http://fizzed.com/oss/font-mfizz][Font Mfizz]]
+
+  You need to have installed these on your system in order to use
+  these fonts, mode-icons will not do this for you. If you don't have
+  them installed you may get some strange glyphs in your mode-line
+  instead.
 
 * Installation
 
