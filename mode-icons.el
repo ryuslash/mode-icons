@@ -566,7 +566,8 @@ ICON-SPEC should be a specification from `mode-icons'."
                            ""))
              (when (and mode-icons-modified-status-space
                         (not (string= mod "")))
-               (setq mod (concat mod " "))))
+               (setq mod (concat mod " ")))
+             mod)
           ,@mode-icons-modified-text-properties)))
 
 ;; Based on rich-minority by Artur Malabarba
