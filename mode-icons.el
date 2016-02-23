@@ -212,6 +212,7 @@ This was stole/modified from `c-save-buffer-state'"
     (unix #xf166 font-mfizz) ;; Use ubuntu, since I think it is the most common.
     (undecided #xf128 FontAwesome)
     ("Text\\'" #xf0f6 FontAwesome)
+    ("\\` ?company\\'" #xf1ad FontAwesome)
     ;; Diminished modes
     ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
     )
