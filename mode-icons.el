@@ -301,25 +301,38 @@ the icon."
                 'local-map
                 '(keymap
                   (mode-line keymap
-                             (mouse-1 . mode-icons-save-buffer)
+                             (mouse-1 . mode-icons-save-or-revert-buffer)
                              (mouse-3 . mode-line-toggle-modified)))
                 'help-echo 'mode-icons-modified-help-echo)
   "List of text propeties to apply to read-only buffer indicator."
   :type '(repeat sexp)
   :group 'mode-icons)
 
-(defun mode-icons-save-buffer (event)
-  "Save buffer from mode line.
+(defun mode-icons-save-or-revert-buffer (event)
+  "Save buffer OR revert file from mode line.
 Use EVENT to determine location."
   (interactive "e")
   (with-selected-window (posn-window (event-start event))
-    (call-interactively (key-binding (where-is-internal 'save-buffer global-map t)))
+    (if (not (or (and (buffer-file-name) (file-remote-p buffer-file-name))
+                 (verify-visited-file-modtime (current-buffer))))
+        (revert-buffer t t)
+      (call-interactively (key-binding (where-is-internal 'save-buffer global-map t))))
     (force-mode-line-update)))
 
 (defun mode-icons-modified-help-echo (window _object _point)
   "Return help text specifying WINDOW's buffer modification status."
-  (format "Buffer is %smodified\nmouse-1: Save Buffer\nmouse-3: Toggle modification state"
-          (if (buffer-modified-p (window-buffer window)) "" "not ")))
+  (format "Buffer is %s\nmouse-1: %s Buffer\nmouse-3: Toggle modification state"
+          (cond
+           ((not (or (and (buffer-file-name) (file-remote-p buffer-file-name))
+                     (verify-visited-file-modtime (current-buffer))))
+            "modified outside of emacs!")
+           ((buffer-modified-p (window-buffer window))
+            "modified")
+           (t "unmodified"))
+          (if (not (or (and (buffer-file-name) (file-remote-p buffer-file-name))
+                       (verify-visited-file-modtime (current-buffer))))
+              "Revert"
+            "Save")))
 
 (defcustom mode-icons-read-only-text-properties
   '('mouse-face 'mode-line-highlight 'local-map
