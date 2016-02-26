@@ -56,7 +56,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   - Major mode base text properties.
   - Narrow text properties.
   - Read only text properties.
-  - Modified text properties
+  - Modified text properties.
   - EOL text.
   - EOL space.
   - Modified status space.
