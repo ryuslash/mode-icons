@@ -206,6 +206,7 @@ This was stole/modified from `c-save-buffer-state'"
     (writable #xf09c FontAwesome)
     (save #xf0c7 FontAwesome)
     (saved "" nil)
+    (modified-outside #xf071 FontAwesome)
     (apple #xf179 FontAwesome)
     (win #xf17a FontAwesome)
     ;; FIXME: use lsb_release to determine Linux variant and choose appropriate icon
@@ -228,6 +229,7 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Writable Indicator" writable)
                  (const :tag "Saved" saved)
                  (const :tag "Save" save)
+                 (const :tag "Modified Outside Emacs" modified-outside)
                  (const :tag "Apple" apple)
                  (const :tag "Windows" win)
                  (const :tag "Unix" unix))
@@ -553,10 +555,17 @@ ICON-SPEC should be a specification from `mode-icons'."
 (defun mode-icons--modified-status ()
   "Get modified status icon."
   (eval `(propertize
-          ,(let ((mod (format-mode-line "%1+"))
+          ,(let ((mod (or (and (not (or (and (buffer-file-name) (file-remote-p buffer-file-name))
+                                        (verify-visited-file-modtime (current-buffer))))
+                               "!")
+                          (format-mode-line "%1+")))
                  icon-spec)
              (setq mod (or (cond
-                            ((string= "*" mod)
+                            ((char-equal ?! (aref mod 0))
+                             (if (setq icon-spec (mode-icons-get-icon-spec 'modified-outside))
+                                 (mode-icons-propertize-mode 'modified-outside icon-spec)
+                               mod))
+                            ((char-equal ?* (aref mod 0))
                              (if (setq icon-spec (mode-icons-get-icon-spec 'save))
                                  (mode-icons-propertize-mode 'save icon-spec)
                                mod))
