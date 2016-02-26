@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Icon for files modified outside emacs (from Font Awesome).
+
 ## [0.3.0]
 
 ### Added
@@ -40,7 +46,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   - Icon for read-only buffers (from Font Awesome).
   - Icon for writable buffers (from Font Awesome).
   - Icon for unsaved buffers (from Font Awesome).
-  - Icon for files modified outside emacs (from Font Awesome).
   - Icon for buffers with Mac OS line-endings (from Font Awesome).
   - Icon for buffers with Windows line-endings (from Font Awesome).
   - Icon for buffers with Unix line-endings (from Font Mfizz).
