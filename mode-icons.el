@@ -58,6 +58,7 @@
 ;; - Font Awesome, found at URL `http://fontawesome.io/'.
 ;; - GitHub Octicons, found at URL `https://octicons.github.com/'.
 ;; - Font Mfizz, found at URL `http://fizzed.com/oss/font-mfizz'.
+;; - IcoMoon, found at URL `https://icomoon.io/#icons-icomoon'.
 ;;
 ;; You should have these installed if you want to use these icons,
 ;; otherwise you may get strange glyphs in your mode-line instead of
@@ -128,13 +129,14 @@ This was stole/modified from `c-save-buffer-state'"
   "Define FONT for `mode-icons'."
   `(progn
      (defvar ,(intern (format "mode-icons-font-spec-%s" font))
-       (font-spec :name ,(format "%s" font)))
+       (and (member ,(format "%s" font) (font-family-list)) (font-spec :name ,(format "%s" font))))
      (defvar ,(intern (format "mode-icons-font-%s" font))
-       (find-font ,(intern (format "mode-icons-font-spec-%s" font))))))
+       (and (member ,(format "%s" font) (font-family-list)) (find-font ,(intern (format "mode-icons-font-spec-%s" font)))))))
 
 (mode-icons-define-font "github-octicons")
 (mode-icons-define-font "font-mfizz")
 (mode-icons-define-font "FontAwesome")
+(mode-icons-define-font "IcoMoon-Free")
 
 (defcustom mode-icons
   `(("CSS" "css" xpm)
@@ -209,7 +211,10 @@ This was stole/modified from `c-save-buffer-state'"
     (apple #xf179 FontAwesome)
     (win #xf17a FontAwesome)
     ;; FIXME: use lsb_release to determine Linux variant and choose appropriate icon
-    (unix #xf166 font-mfizz) ;; Use ubuntu, since I think it is the most common.
+    (unix #xeabd IcoMoon-Free)  ;; Clear Tux (Unlike FontAwesome)
+    ;; This icon is clearer than FontAwesome's Linux Penguin
+    (unix #xf166 font-mfizz)    ;; Use ubuntu, since I think it is the most common.
+    (unix #xf17c FontAwesome) ;; Fall Back to FontAwesome
     (undecided #xf128 FontAwesome)
     ("Text\\'" #xf0f6 FontAwesome)
     ("\\` ?company\\'" #xf1ad FontAwesome)
@@ -240,6 +245,7 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Octicons" github-octicons)
                  (const :tag "Fizzed" font-mfizz)
                  (const :tag "Font Awesome" FontAwesome)
+                 (const :tag "Ico Moon Free" IcoMoon-Free)
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)

@@ -36,11 +36,10 @@ Some of the modes that have icons instead of names now:
   - [[http://fontawesome.io/][Font Awesome]]
   - [[https://octicons.github.com/][GitHub Octicons]]
   - [[http://fizzed.com/oss/font-mfizz][Font Mfizz]]
+  - [[https://icomoon.io/#icons-icomoon][IcoMoon]]
 
   You need to have installed these on your system in order to use
-  these fonts, mode-icons will not do this for you. If you don't have
-  them installed you may get some strange glyphs in your mode-line
-  instead.
+  these fonts, mode-icons will not do this for you.
 
 * Installation
 
