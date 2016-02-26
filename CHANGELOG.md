@@ -40,6 +40,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   - Icon for read-only buffers (from Font Awesome).
   - Icon for writable buffers (from Font Awesome).
   - Icon for unsaved buffers (from Font Awesome).
+  - Icon for files modified outside emacs (from Font Awesome).
   - Icon for buffers with Mac OS line-endings (from Font Awesome).
   - Icon for buffers with Windows line-endings (from Font Awesome).
   - Icon for buffers with Unix line-endings (from Font Mfizz).
@@ -55,7 +56,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   - Major mode base text properties.
   - Narrow text properties.
   - Read only text properties.
-  - Modified text properties.
+  - Modified text properties
   - EOL text.
   - EOL space.
   - Modified status space.
