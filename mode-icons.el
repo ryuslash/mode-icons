@@ -468,12 +468,18 @@ ICON-SPEC should be a specification from `mode-icons'."
 (defun mode-icons-get-mode-icon (mode)
   "Get the icon for MODE, if there is one."
   (let* ((mode-name (format-mode-line mode))
-         (icon-spec (mode-icons-get-icon-spec mode-name)))
+         (icon-spec (mode-icons-get-icon-spec mode-name))
+         ret)
     (if icon-spec
-        (if mode-icons-show-mode-name
-            (concat (mode-icons-propertize-mode mode-name icon-spec) " " mode-name)
-          (mode-icons-propertize-mode mode-name icon-spec))
-      mode-name)))
+        (setq ret
+              (if mode-icons-show-mode-name
+                      (concat (mode-icons-propertize-mode mode-name icon-spec) " " mode-name)
+                    (mode-icons-propertize-mode mode-name icon-spec)))
+      (setq ret mode-name))
+    ;; Don't hide major mode names...
+    (when (string= ret "")
+      (setq ret mode-name))
+    ret))
 
 (defvar mode-icons-cached-mode-name nil
   "Cached mode name to restore when disabling mode-icons.")
