@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Icon for files modified outside emacs (from Font Awesome).
+- Icon for files that are being modified by another user (from Font Awesome).
 
 ## [0.3.0]
 
