@@ -190,6 +190,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("Custom" #xf013 FontAwesome)
     ("\\`Go\\'" "go" xpm)
     (" Rbow" "rainbow" xpm)
+    (" Icy" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.htmlr
     (" Golden" "golden" xpm) ;; Icon created by Arthur Shlain from Noun Project
     ("BibTeX" "bibtex" xpm)
     ("C[+][+]/l" #xf10c font-mfizz)
@@ -210,18 +211,27 @@ This was stole/modified from `c-save-buffer-state'"
     (saved "" nil)
     (modified-outside #xf071 FontAwesome)
     (steal #xf21b FontAwesome)
+    ;; Prefer finder icon since it looks like the old mac icon
+    (apple #xeabf IcoMoon-Free)
     (apple #xf179 FontAwesome)
     (win #xf17a FontAwesome)
     ;; FIXME: use lsb_release to determine Linux variant and choose appropriate icon
     (unix #xeabd IcoMoon-Free)  ;; Clear Tux (Unlike FontAwesome)
+
     ;; This icon is clearer than FontAwesome's Linux Penguin
     (unix #xf166 font-mfizz)    ;; Use ubuntu, since I think it is the most common.
     (unix #xf17c FontAwesome) ;; Fall Back to FontAwesome
     (undecided #xf128 FontAwesome)
     ("Text\\'" #xf0f6 FontAwesome)
     ("\\` ?company\\'" #xf1ad FontAwesome)
+    ("\\` ?AC\\'" #xf18e FontAwesome)
+    ("\\` ?Fly\\'" #xea12 IcoMoon-Free)
+    ("\\` Ergo" #xf11c FontAwesome)
+    ("\\`Messages\\'" #xf044 FontAwesome)
+    ("\\`Conf" #xf1de FontAwesome)
+    ("\\`Fundamental\\'" #xf016 FontAwesome)
     ;; Diminished modes
-    ("\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\|Fly\\)" nil nil)
+    ("\\` \\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil)
     )
   "Icons for major and minor modes.
 
@@ -315,10 +325,6 @@ the icon."
   "List of text propeties to apply to read-only buffer indicator."
   :type '(repeat sexp)
   :group 'mode-icons)
-
-(defun mode-icons-ask-user-about-lock (_file _other-user)
-  "Automatically steals lock."
-  t)
 
 (defun mode-icons-save-steal-or-revert-buffer (event)
   "Save buffer OR revert file from mode line.
