@@ -190,7 +190,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("Custom" #xf013 FontAwesome)
     ("\\`Go\\'" "go" xpm)
     (" Rbow" "rainbow" xpm)
-    (" Icy" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.htmlr
+    (" ICY" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.htmlr
     (" Golden" "golden" xpm) ;; Icon created by Arthur Shlain from Noun Project
     ("BibTeX" "bibtex" xpm)
     ("C[+][+]/l" #xf10c font-mfizz)
@@ -451,20 +451,21 @@ ICON-SPEC should be a specification from `mode-icons'."
 
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec for MODE based on regular expression."
-  (catch 'found-mode
-    (dolist (item mode-icons)
-      (when (and (mode-icons-supported-p item)
-                 (or
-                  (and
-                   (stringp (car item))
-                   (stringp mode)
-                   (string-match-p (car item) mode))
-                  (and
-                   (symbolp (car item))
-                   (symbolp mode)
-                   (eq mode (car item)))))
-        (throw 'found-mode item)))
-    nil))
+  (let (case-fold-search)
+    (catch 'found-mode
+      (dolist (item mode-icons)
+        (when (and (mode-icons-supported-p item)
+                   (or
+                    (and
+                     (stringp (car item))
+                     (stringp mode)
+                     (string-match-p (car item) mode))
+                    (and
+                     (symbolp (car item))
+                     (symbolp mode)
+                     (eq mode (car item)))))
+          (throw 'found-mode item)))
+      nil)))
 
 (defcustom mode-icons-show-mode-name nil
   "Show Icon and `mode-name'."
