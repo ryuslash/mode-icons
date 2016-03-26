@@ -205,6 +205,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`AHK\\'" "autohotkey" xpm)
     ("\\`Info\\'" #xf05a FontAwesome)
     ("\\` Narrow\\'" #xf066 FontAwesome)
+    ("\\`Dockerfile\\'" "docker" xpm)
     (read-only #xf023 FontAwesome)
     (writable #xf09c FontAwesome)
     (save #xf0c7 FontAwesome)
