@@ -8,7 +8,28 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Icon for files modified outside emacs (from Font Awesome).
-- Icon for files that are being modified by another user (from Font Awesome).
+- Icon for files that are being modified by another user (from Font
+  Awesome).
+- Icicle minor mode icon.
+- Auto complete minor mode icon (from Font Awesome).
+- Another icon for buffers with Mac OS line-endings (from IcoMoon
+  Free).
+- Flyspell minor mode icon (from IcoMoon Free).
+- Ergoemacs minor mode icon (from Font Awesome).
+- Messages mode icon (from Font Awesome).
+- Conf mode icon (from Font Awesome).
+- Fundamental mode icon (from Font Awesome).
+- Dockerfile mode icon.
+
+### Changed
+
+- Mode names in mode icon specifications are now case-sensitive.
+- All mode names in mode icon specifications have changed to only
+  match the complete name, not a partial name.
+
+### Removed
+
+- The option to hide major mode names.
 
 ## [0.3.0]
 
