@@ -20,6 +20,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Conf mode icon (from Font Awesome).
 - Fundamental mode icon (from Font Awesome).
 - Dockerfile mode icon.
+- Drag stuff minor mode icon (from Font Awesome).
+- Helm minor mode icon.
 - Javascript-IDE mode (js2-mode) icon.
 
 ### Changed
