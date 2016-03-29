@@ -190,7 +190,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Custom\\'" #xf013 FontAwesome)
     ("\\`Go\\'" "go" xpm)
     ("\\` Rbow\\'" "rainbow" xpm)
-    ("\\` ICY\\'" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.htmlr
+    ("\\` ICY\\'" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.html
     ("\\` Golden\\'" "golden" xpm) ;; Icon created by Arthur Shlain from Noun Project
     ("\\`BibTeX\\'\\'" "bibtex" xpm)
     ("\\`C[+][+]/l\\'" #xf10c font-mfizz)
@@ -229,6 +229,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\` ?Fly\\'" #xea12 IcoMoon-Free)
     ("\\` Ergo" #xf11c FontAwesome)
     ("\\` drag\\'" #xf047 FontAwesome)
+    ("\\` Helm\\'" "helm" xpm) ;; By Noe Araujo, MX, https://thenounproject.com/term/helm/233101/
     ("\\`Messages\\'" #xf044 FontAwesome)
     ("\\`Conf" #xf1de FontAwesome)
     ("\\`Fundamental\\'" #xf016 FontAwesome)
