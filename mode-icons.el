@@ -233,6 +233,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Messages\\'" #xf044 FontAwesome)
     ("\\`Conf" #xf1de FontAwesome)
     ("\\`Fundamental\\'" #xf016 FontAwesome)
+    ("\\`Javascript-IDE\\'" "js" xpm)
     ;; Diminished modes
     ("\\` \\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil)
     )
@@ -614,7 +615,7 @@ ICON-SPEC should be a specification from `mode-icons'."
   (eval `(propertize
           ,(or (ignore-errors
                  (let* ((bfn (buffer-file-name))
-                        (nice-file-p (and  (file-remote-p bfn))) 
+                        (nice-file-p (and  (file-remote-p bfn)))
                         (mod (or (and (not (or nice-file-p (verify-visited-file-modtime (current-buffer))))
                                       "!")
                                  (and (not (or nice-file-p (member (file-locked-p bfn) '(nil t))))
