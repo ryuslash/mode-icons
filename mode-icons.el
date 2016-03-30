@@ -67,6 +67,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'color)
 
 (defgroup mode-icons nil
   "Provide icons for major modes."
@@ -87,13 +88,14 @@ absolute path to ICON."
   (concat mode-icons--directory "/icons/" icon))
 
 (defmacro mode-icons-save-buffer-state (&rest body)
-  "Eval BODY,
-then restore the buffer state under the assumption that no significant
-modification has been made in BODY.  A change is considered
-significant if it affects the buffer text in any way that isn't
-completely restored again.  Changes in text properties like `face' or
-`syntax-table' are considered insignificant.  This macro allows text
-properties to be changed, even in a read-only buffer.
+  "Eval BODY saving buffer state.
+This macro restores the buffer state under the assumption that no
+significant modification has been made in BODY.  A change is
+considered significant if it affects the buffer text in any way
+that isn't completely restored again.  Changes in text properties
+like `face' or `syntax-table' are considered insignificant.  This
+macro allows text properties to be changed, even in a read-only
+buffer.
 
 This macro should be placed around all calculations which set
 \"insignificant\" text properties in a buffer, even when the buffer is
@@ -445,7 +447,7 @@ Use EVENT to determine location."
 (defvar mode-icons-font-register-alist nil
   "Alist of characters supported.")
 
-(defun mode-icons-supported-font-p (char font &optional dont-register)
+(defun mode-icons-supported-font-p (char font)
   "Determine if the CHAR is supported in FONT.
 When DONT-REGISTER is non-nil, don't register the font.
 Otherwise, register the font for use in the mode-line and
@@ -471,7 +473,7 @@ everywhere else."
   "Determine if ICON-SPEC is suppored on your system."
   (or
    (and (or (eq (nth 2 icon-spec) nil) (eq (nth 1 icon-spec) nil)) t)
-   (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec) t)
+   (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
    (and (image-type-available-p (nth 2 icon-spec)))))
@@ -744,7 +746,7 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
   :group 'mode-icons)
 
 (defcustom mode-icons-eol-text nil
-  "Describe end of line type
+  "Describe end of line type.
 \(Unix) -> LF
 \(DOS) -> CRLF
 \(Mac) -> CR"
@@ -792,7 +794,8 @@ STRING is the string to modify, or if absent, the value from `mode-line-eol-desc
 
 
 (defun mode-icons-fix (&optional enable)
-  "Fix mode-icons."
+  "Fix mode-icons.
+When ENABLE is non-nil, enable the changes to the mode line."
   (if enable
       (let ((place (or (member 'minor-mode-alist mode-line-modes)
                        (cl-member-if
