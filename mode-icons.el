@@ -274,7 +274,8 @@ without the extension.  And the third being the type of icon."
 
 (defun mode-icons-get-icon-display-xpm-replace (icon-path rep-alist)
   "Get xpm image from ICON-PATH and reaplce REP-ALIST in file."
-  (let ((img (with-temp-buffer (insert-file-contents icon-path) (buffer-string))))
+  (let ((case-fold-search t)
+        (img (with-temp-buffer (insert-file-contents icon-path) (buffer-string))))
     (dolist (c rep-alist)
       (setq img (replace-regexp-in-string (regexp-quote (car c)) (cdr c) img t t)))
     img))
