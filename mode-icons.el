@@ -765,7 +765,7 @@ STRING is the string to modify, or if absent, the value from `mode-line-eol-desc
                         (lambda(x)
                           (and (listp x)
                                (equal (car x) :eval)
-                               (eq (caadr x) 'mode-line-eol-desc)))
+                               (eq (cl-caadr x) 'mode-line-eol-desc)))
                         mode-line-mule-info)))
         (when place
           (setq mode-icons--backup-construct (car place))
