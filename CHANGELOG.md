@@ -31,7 +31,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   match the complete name, not a partial name.
 - C, C++, C#, PHP and Java modes match a wider variety of modes.  See
   (Issue #18).
-- Allow black and white xpm icons to match the mode-line face colors. (Helm)
+- Allow black and white xpm icons to match the mode-line face colors
+  (both active and inactive)
 
 ### Removed
 
