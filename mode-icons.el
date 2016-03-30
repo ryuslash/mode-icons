@@ -228,7 +228,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\` ?Fly\\'" #xea12 IcoMoon-Free)
     ("\\` Ergo" #xf11c FontAwesome)
     ("\\` drag\\'" #xf047 FontAwesome)
-    ("\\` Helm\\'" "helm" xpm) ;; By Noe Araujo, MX, https://thenounproject.com/term/helm/233101/
+    ("\\` Helm\\'" "helm" xpm-bw) ;; By Noe Araujo, MX, https://thenounproject.com/term/helm/233101/
     ("\\`Messages\\'" #xf044 FontAwesome)
     ("\\`Conf" #xf1de FontAwesome)
     ("\\`Fundamental\\'" #xf016 FontAwesome)
@@ -268,18 +268,45 @@ without the extension.  And the third being the type of icon."
                  (const :tag "jpeg" jpeg)
                  (const :tag "jpg" jpg)
                  (const :tag "xbm" xbm)
-                 (const :tag "xpm" xpm))))
+                 (const :tag "xpm" xpm)
+                 (const :tag "Black and White xpm that changes color to match the mode-line face" xpm-bw))))
   :group 'mode-icons)
 
-(defun mode-icons-get-icon-display (icon type)
+(defun mode-icons-get-icon-display-xpm-replace (icon-path rep-alist)
+  "Get xpm image from ICON-PATH and reaplce REP-ALIST in file."
+  (let ((img (with-temp-buffer (insert-file-contents icon-path) (buffer-string))))
+    (dolist (c rep-alist)
+      (setq img (replace-regexp-in-string (regexp-quote (car c)) (cdr c) img t t)))
+    img))
+
+(defun mode-icons-get-icon-display-xpm-bw-face (icon-path &optional face)
+  "Change xpm at ICON-PATH to match FACE."
+  (let ((background (color-name-to-rgb (face-background (or face 'mode-line))))
+        (foreground (color-name-to-rgb (face-foreground (or face 'mode-line))))
+        lst)
+    (setq foreground (color-rgb-to-hex (nth 0 foreground) (nth 1 foreground) (nth 2 foreground))
+          background (color-rgb-to-hex (nth 0 background) (nth 1 background) (nth 2 background)))
+    (push (cons "#000000" foreground) lst)
+    (push (cons "#ffffff" background) lst)
+    (mode-icons-get-icon-display-xpm-replace icon-path lst)))
+
+(defun mode-icons-get-icon-display (icon type &optional face)
   "Get the value for the display property of ICON having TYPE.
 
 ICON should be a string naming the file of the icon, without its
 extension.  Type should be a symbol designating the file type for
-the icon."
+the icon.
+
+FACE should be the face for rendering black and white xpm icons
+specified by type 'xpm-bw."
   (let ((icon-path (mode-icons-get-icon-file
-                    (concat icon "." (symbol-name type)))))
-    `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center)))
+                    (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
+                                         (symbol-name type))))))
+    (if (eq type 'xpm-bw)
+        (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
+                      'xpm t :ascent 'center
+                      :face (or face 'mode-line))
+      `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center))))
 
 (defcustom mode-icons-minor-mode-base-text-properties
   '('help-echo nil
@@ -420,6 +447,7 @@ everywhere else."
    (and (or (eq (nth 2 icon-spec) nil) (eq (nth 1 icon-spec) nil)) t)
    (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec) t)
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
+   (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
    (and (image-type-available-p (nth 2 icon-spec)))))
 
 (defun mode-icons-propertize-mode (mode icon-spec)
