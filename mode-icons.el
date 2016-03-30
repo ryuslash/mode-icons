@@ -190,7 +190,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Go\\'" "go" xpm)
     ("\\` Rbow\\'" "rainbow" xpm)
     ("\\` ICY\\'" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.html
-    ("\\` Golden\\'" "golden" xpm) ;; Icon created by Arthur Shlain from Noun Project
+    ("\\` Golden\\'" "golden" xpm-bw) ;; Icon created by Arthur Shlain from Noun Project
     ("\\`BibTeX\\'\\'" "bibtex" xpm)
     ("\\`C[+][+]\\(/.*\\|\\)\\'" #xf10c font-mfizz)
     ("\\`C[#]\\(/.*\\|\\)\\'" #xf10d font-mfizz)
@@ -280,15 +280,40 @@ without the extension.  And the third being the type of icon."
       (setq img (replace-regexp-in-string (regexp-quote (car c)) (cdr c) img t t)))
     img))
 
+(defun mode-icons-interpolate (c1 c2 &optional factor)
+  "Interpolate between C1 and C2 by FACTOR.
+If FACTOR is unspecified, use 0.5"
+  (let* ((factor (or factor 0.5))
+         (red (+ (* (nth 0 c1) factor) (* (nth 0 c2) (- 1.0 factor))))
+         (green (+ (* (nth 1 c1) factor) (* (nth 1 c2) (- 1.0 factor))))
+         (blue (+ (* (nth 2 c1) factor) (* (nth 2 c2) (- 1.0 factor)))))
+    (setq red (/ (round (* 256.0 red)) 256.0)
+          green (/ (round (* 256.0 green)) 256.0)
+          blue (/ (round (* 256.0 blue)) 256.0))
+    (color-rgb-to-hex red green blue)))
+
+(defun mode-icons-interpolate-from-scale (foreground background)
+  "Interpolate black to FOREGROUND and white to BACKGROUND.
+Grayscales are in between."
+  (let ((black '(0.0 0.0 0.0))
+        (white '(1.0 1.0 1.0))
+        lst tmp
+        (i 0))
+    (while (< i 256)
+      (setq tmp (/ i 255.0))
+      (push (cons (mode-icons-interpolate black white tmp)
+                  (mode-icons-interpolate foreground background tmp)) lst)
+      (setq i (1+ i)))
+    lst))
+
 (defun mode-icons-get-icon-display-xpm-bw-face (icon-path &optional face)
-  "Change xpm at ICON-PATH to match FACE."
-  (let ((background (color-name-to-rgb (face-background (or face 'mode-line))))
-        (foreground (color-name-to-rgb (face-foreground (or face 'mode-line))))
-        lst)
-    (setq foreground (color-rgb-to-hex (nth 0 foreground) (nth 1 foreground) (nth 2 foreground))
-          background (color-rgb-to-hex (nth 0 background) (nth 1 background) (nth 2 background)))
-    (push (cons "#000000" foreground) lst)
-    (push (cons "#ffffff" background) lst)
+  "Change xpm at ICON-PATH to match FACE.
+The white is changed to the background color.
+The black is changed to the foreground color.
+Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
+  (let* ((background (color-name-to-rgb (face-background (or face 'mode-line))))
+         (foreground (color-name-to-rgb (face-foreground (or face 'mode-line))))
+         (lst (mode-icons-interpolate-from-scale foreground background)))
     (mode-icons-get-icon-display-xpm-replace icon-path lst)))
 
 (defun mode-icons-get-icon-display (icon type &optional face)
