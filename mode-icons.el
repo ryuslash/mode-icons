@@ -311,6 +311,9 @@ Grayscales are in between."
       (setq i (1+ i)))
     lst))
 
+(defvar mode-icons-get-icon-display-xpm-bw-face (make-hash-table)
+  "Hash table of dynamic images.")
+
 (defun mode-icons-get-icon-display-xpm-bw-face (icon-path &optional face)
   "Change xpm at ICON-PATH to match FACE.
 The white is changed to the background color.
@@ -321,8 +324,11 @@ Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
          (lst (mode-icons-interpolate-from-scale foreground background))
          (name (concat "mode_icons_bw_" (substring (mode-icons-interpolate background foreground 0.0) 1) "_"
                        (substring (mode-icons-interpolate background foreground 1.0) 1) "_"
-                       (file-name-sans-extension (file-name-nondirectory icon-path)))))
-    (mode-icons-get-icon-display-xpm-replace icon-path lst name)))
+                       (file-name-sans-extension (file-name-nondirectory icon-path))))
+         (sym (intern name))
+         ret)
+    (or (gethash sym mode-icons-get-icon-display-xpm-bw-face)
+        (puthash sym (mode-icons-get-icon-display-xpm-replace icon-path lst name) mode-icons-get-icon-display-xpm-bw-face))))
 
 (defun mode-icons-get-icon-display (icon type &optional face)
   "Get the value for the display property of ICON having TYPE.
@@ -491,28 +497,28 @@ MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'."
   (mode-icons-save-buffer-state ;; Otherwise may cause issues with trasient mark mode
    (cond
-      ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
-       mode)
-      ((not (nth 1 icon-spec))
-       "")
-      ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
-       (propertize (nth 1 icon-spec) 'display (nth 1 icon-spec)
-                   'mode-icons-p t))
-      ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
-       ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
-       ;; Use `compose-region' because it allows clicable text.
-       (with-temp-buffer
-         (if (stringp mode)
-             (insert mode)
-           (insert (or (and (integerp (nth 1 icon-spec))
-                            (make-string 1 (nth 1 icon-spec)))
-                       (nth 1 icon-spec))))
-         (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
-                                                          (make-string 1 (nth 1 icon-spec)))
-                                                     (nth 1 icon-spec)))
-         (put-text-property (point-min) (point-max) 'mode-icons-p t)
-         (buffer-string)))
-      (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p t)))))
+    ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
+     mode)
+    ((not (nth 1 icon-spec))
+     "")
+    ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
+     (propertize (nth 1 icon-spec) 'display (nth 1 icon-spec)
+                 'mode-icons-p icon-spec))
+    ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+     ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
+     ;; Use `compose-region' because it allows clicable text.
+     (with-temp-buffer
+       (if (stringp mode)
+           (insert mode)
+         (insert (or (and (integerp (nth 1 icon-spec))
+                          (make-string 1 (nth 1 icon-spec)))
+                     (nth 1 icon-spec))))
+       (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
+                                                        (make-string 1 (nth 1 icon-spec)))
+                                                   (nth 1 icon-spec)))
+       (put-text-property (point-min) (point-max) 'mode-icons-p icon-spec)
+       (buffer-string)))
+    (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p icon-spec)))))
 
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec for MODE based on regular expression."
@@ -626,11 +632,62 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
   "Give rich strings needed for `major-mode' viewing."
   (eval `(propertize ,mode-name ,@mode-icons-major-mode-base-text-properties)))
 
+;;; selected take from powerline
+(defvar mode-icons--selected-window (frame-selected-window)
+  "Selected window.")
+
+(defun mode-icons--set-selected-window ()
+  "Set the variable `mode-icons--selected-window' appropriately."
+  (when (not (minibuffer-window-active-p (frame-selected-window)))
+    (setq mode-icons--selected-window (frame-selected-window))))
+
+(defun mode-icons--unset-selected-window ()
+  "Unsets the variable `mode-icons--selected-window' and update the modeline."
+  (setq mode-icons--selected-window nil)
+  (force-mode-line-update))
+
+(add-hook 'window-configuration-change-hook 'mode-icons--set-selected-window)
+
+;; focus-in-hook was introduced in emacs v24.4.
+;; Gets evaluated in the last frame's environment.
+(add-hook 'focus-in-hook 'mode-icons--set-selected-window)
+
+;; focus-out-hook was introduced in emacs v24.4.
+(add-hook 'focus-out-hook 'mode-icons--unset-selected-window)
+
+;; Executes after the window manager requests that the user's events
+;; be directed to a different frame.
+(defadvice handle-switch-frame
+    (after mode-icons--set-selected-window-after-switch-frame activate)
+  "Make `mode-icons' aware of selected window."
+  (mode-icons--set-selected-window))
+
+(defadvice select-window (after mode-icons--select-window activate)
+  "Make `mode-icons' aware of selected window."
+  (mode-icons--set-selected-window))
+
+(defun mode-icons--selected-window-active ()
+  "Return whether the current window is active."
+  (eq mode-icons--selected-window (selected-window)))
+
+(defun mode-icons--recolor-minor-mode-image (mode active)
+  "Recolor MODE image based on if the window is ACTIVE."
+  (let ((icon-spec (get-text-property 0 'mode-icons-p mode)))
+    (cond
+     ((and icon-spec (eq (nth 2 icon-spec) 'xpm-bw))
+      (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
+                                                             (or (and active 'mode-line)
+                                                                 'mode-line-inactive))
+                  'mode-icons-p icon-spec))
+     (t mode))))
+
 (defun mode-icons--generate-minor-mode-list ()
   "Extracts all rich strings necessary for the minor mode list."
-  (delete " " (delete "" (mapcar (lambda(mode)
-                                   (concat " " (eval `(propertize ,mode ,@mode-icons-minor-mode-base-text-properties))))
-                                 (split-string (format-mode-line minor-mode-alist))))))
+  (let ((active (mode-icons--selected-window-active)))
+    (delete " " (delete "" (mapcar (lambda(mode)
+                                     (concat " " (eval `(propertize ,(mode-icons--recolor-minor-mode-image mode active)
+                                                                    ,@mode-icons-minor-mode-base-text-properties))))
+                                   (split-string (format-mode-line minor-mode-alist)))))))
 
 (defun mode-icons--generate-narrow ()
   "Extracts all rich strings necessary for narrow indicator."
