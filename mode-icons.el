@@ -575,23 +575,26 @@ ICON-SPEC should be a specification from `mode-icons'."
 
 (defvar mode-icons-set-minor-mode-icon-alist nil)
 
-(defun mode-icons-set-minor-mode-icon-undo ()
-  "Undo minor modes."
+(defun mode-icons-set-minor-mode-icon-undo (&optional dont-update)
+  "Undo minor modes.
+When DONT-UPDATE is non-nil, don't call `force-mode-line-update'."
   (let (minor)
     (dolist (mode mode-icons-set-minor-mode-icon-alist)
       (setq minor (assq (car mode) minor-mode-alist))
       (when minor
         (setcdr minor (cdr mode)))))
   (setq mode-icons-set-minor-mode-icon-alist nil)
-  (force-mode-line-update))
+  (unless dont-update
+    (force-mode-line-update)))
 
 (defcustom mode-icons-separate-images-with-spaces t
   "Separate minor-mode icons with spaces."
   :type 'boolean
   :group 'mode-icons)
 
-(defun mode-icons-set-minor-mode-icon ()
-  "Set the icon for the minor modes."
+(defun mode-icons-set-minor-mode-icon (&optional dont-update)
+  "Set the icon for the minor modes.
+When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
   (let (icon-spec mode-name minor)
     (dolist (mode minor-mode-alist)
       (unless (assq (car mode) mode-icons-set-minor-mode-icon-alist)
@@ -608,7 +611,8 @@ ICON-SPEC should be a specification from `mode-icons'."
                 (setcdr minor (list ""))
               (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
                                           mode-name)))))))))
-  (force-mode-line-update))
+  (unless dont-update
+    (force-mode-line-update)))
 
 (defun mode-icons--generate-major-mode-item ()
   "Give rich strings needed for `major-mode' viewing."
@@ -863,16 +867,32 @@ STRING is the string to modify, or if absent, the value from `mode-line-eol-desc
   :global t
   (if mode-icons-mode
       (progn
-        (add-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
-        (add-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
+        ;; (add-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
+        (add-hook 'after-change-major-mode-hook #'mode-icons-reset)
         (mode-icons-fix t)
         (mode-icons-set-minor-mode-icon)
         (mode-icons-major-mode-icons))
-    (remove-hook 'after-change-major-mode-hook 'mode-icons-set-minor-mode-icon)
-    (remove-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
+    (remove-hook 'after-change-major-mode-hook #'mode-icons-reset)
     (mode-icons-set-minor-mode-icon-undo)
     (mode-icons-major-mode-icons-undo)
     (mode-icons-fix)))
+
+(defun mode-icons-reset-now ()
+  "Reset mode-icons icons."
+  (interactive)
+  (when (and mode-icons-mode (not (minibufferp)))
+    (mode-icons-set-current-mode-icon)
+    ;; FIXME -- undo to allow `ergoemacs-mode' and color changing
+    ;; XPMs.  Seems a bit heavy handed.
+    (mode-icons-set-minor-mode-icon-undo t)
+    (mode-icons-set-minor-mode-icon)))
+
+(defun mode-icons-reset ()
+  "Reset mode-icons icons."
+  (interactive)
+  (run-with-idle-timer 0.1 nil #'mode-icons-reset-now))
+
+(add-hook 'emacs-startup-hook #'mode-icons-reset)
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
