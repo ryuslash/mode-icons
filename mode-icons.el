@@ -140,7 +140,7 @@ This was stole/modified from `c-save-buffer-state'"
 
 (defcustom mode-icons
   `(("\\`CSS\\'" "css" xpm)
-    ("\\`Coffee\\'" "coffee" xpm)
+    ("\\`Coffee\\'" "coffee" xpm-bw)
     ("\\`Compilation\\'" "compile" xpm)
     ("\\`Emacs-Lisp\\'" "emacs" xpm)
     ("\\`Lisp Interaction\\'" "emacs" xpm)
@@ -162,9 +162,9 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`iESS\\'" "R" xpm)
     ("\\`SCSS\\'" "sass" xpm)
     ("\\`Sass\\'" "sass" xpm)
-    ("\\`'Scheme" "scheme" xpm)
-    ("\\`'Shell-script" "bash" xpm)
-    ("\\`Slim" "slim" xpm)
+    ("\\`Scheme" "scheme" xpm-bw)
+    ("\\`Shell-script" "bash" xpm-bw)
+    ("\\`Slim" "slim" xpm-bw)
     ("\\`Snippet" "yas" xpm)
     ("\\`Term\\'" "term" xpm)
     ("\\`Web\\'" "html" xpm)
