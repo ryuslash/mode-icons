@@ -330,6 +330,9 @@ Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
     (or (gethash sym mode-icons-get-icon-display-xpm-bw-face)
         (puthash sym (mode-icons-get-icon-display-xpm-replace icon-path lst name) mode-icons-get-icon-display-xpm-bw-face))))
 
+(defvar mode-icons-get-icon-display (make-hash-table :test 'equal)
+  "Hash table of `mode-icons-get-icon-display'.")
+
 (defun mode-icons-get-icon-display (icon type &optional face)
   "Get the value for the display property of ICON having TYPE.
 
@@ -339,14 +342,17 @@ the icon.
 
 FACE should be the face for rendering black and white xpm icons
 specified by type 'xpm-bw."
-  (let ((icon-path (mode-icons-get-icon-file
-                    (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
-                                         (symbol-name type))))))
-    (if (eq type 'xpm-bw)
-        (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
-                      'xpm t :ascent 'center
-                      :face (or face 'mode-line))
-      `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center))))
+  (or (gethash (list icon type (or face 'mode-line)) mode-icons-get-icon-display)
+      (puthash (list icon type (or face 'mode-line))
+               (let ((icon-path (mode-icons-get-icon-file
+                                 (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
+                                                      (symbol-name type))))))
+                 (if (eq type 'xpm-bw)
+                     (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
+                                   'xpm t :ascent 'center
+                                   :face (or face 'mode-line))
+                   `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center)))
+               mode-icons-get-icon-display)))
 
 (defcustom mode-icons-minor-mode-base-text-properties
   '('help-echo nil
@@ -520,23 +526,27 @@ ICON-SPEC should be a specification from `mode-icons'."
        (buffer-string)))
     (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p icon-spec)))))
 
+(defvar mode-icons-get-icon-spec (make-hash-table :test 'equal)
+  "Hash table of icon-specifications.")
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec for MODE based on regular expression."
-  (let (case-fold-search)
-    (catch 'found-mode
-      (dolist (item mode-icons)
-        (when (and (mode-icons-supported-p item)
-                   (or
-                    (and
-                     (stringp (car item))
-                     (stringp mode)
-                     (string-match-p (car item) mode))
-                    (and
-                     (symbolp (car item))
-                     (symbolp mode)
-                     (eq mode (car item)))))
-          (throw 'found-mode item)))
-      nil)))
+  (or (gethash mode mode-icons-get-icon-spec)
+      (puthash mode (let (case-fold-search)
+                      (catch 'found-mode
+                        (dolist (item mode-icons)
+                          (when (and (mode-icons-supported-p item)
+                                     (or
+                                      (and
+                                       (stringp (car item))
+                                       (stringp mode)
+                                       (string-match-p (car item) mode))
+                                      (and
+                                       (symbolp (car item))
+                                       (symbolp mode)
+                                       (eq mode (car item)))))
+                            (throw 'found-mode item)))
+                        nil))
+               mode-icons-get-icon-spec)))
 
 (defcustom mode-icons-show-mode-name nil
   "Show Icon and `mode-name'."
@@ -949,7 +959,7 @@ When ENABLE is non-nil, enable the changes to the mode line."
     (mode-icons-set-current-mode-icon)
     ;; FIXME -- undo to allow `ergoemacs-mode' and color changing
     ;; XPMs.  Seems a bit heavy handed.
-    (mode-icons-set-minor-mode-icon-undo t)
+    ;; (mode-icons-set-minor-mode-icon-undo t)
     (mode-icons-set-minor-mode-icon)))
 
 (defun mode-icons-reset ()
