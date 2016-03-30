@@ -29,6 +29,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Mode names in mode icon specifications are now case-sensitive.
 - All mode names in mode icon specifications have changed to only
   match the complete name, not a partial name.
+- C, C++, C#, PHP and Java modes match a wider variety of modes.  See
+  (Issue #18).
 
 ### Removed
 
