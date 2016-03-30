@@ -85,7 +85,7 @@
 
 ICON should be a file name with extension.  The result is the
 absolute path to ICON."
-  (concat mode-icons--directory "/icons/" icon))
+  (expand-file-name icon (expand-file-name "icons" mode-icons--directory)))
 
 (defmacro mode-icons-save-buffer-state (&rest body)
   "Eval BODY saving buffer state.
