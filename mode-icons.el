@@ -274,12 +274,15 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Black and White xpm that changes color to match the mode-line face" xpm-bw))))
   :group 'mode-icons)
 
-(defun mode-icons-get-icon-display-xpm-replace (icon-path rep-alist)
-  "Get xpm image from ICON-PATH and reaplce REP-ALIST in file."
+(defun mode-icons-get-icon-display-xpm-replace (icon-path rep-alist &optional name)
+  "Get xpm image from ICON-PATH and reaplce REP-ALIST in file.
+When NAME is non-nil, also replace the internal xpm image name."
   (let ((case-fold-search t)
         (img (with-temp-buffer (insert-file-contents icon-path) (buffer-string))))
     (dolist (c rep-alist)
       (setq img (replace-regexp-in-string (regexp-quote (car c)) (cdr c) img t t)))
+    (when name
+      (setq img (replace-regexp-in-string "^[ ]*static[ ]+char[ ]+[*][ ]+.*?\\[" (concat "static char * " name "[") img t t)))
     img))
 
 (defun mode-icons-interpolate (c1 c2 &optional factor)
@@ -315,8 +318,11 @@ The black is changed to the foreground color.
 Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
   (let* ((background (color-name-to-rgb (face-background (or face 'mode-line))))
          (foreground (color-name-to-rgb (face-foreground (or face 'mode-line))))
-         (lst (mode-icons-interpolate-from-scale foreground background)))
-    (mode-icons-get-icon-display-xpm-replace icon-path lst)))
+         (lst (mode-icons-interpolate-from-scale foreground background))
+         (name (concat "mode_icons_bw_" (substring (mode-icons-interpolate background foreground 0.0) 1) "_"
+                       (substring (mode-icons-interpolate background foreground 1.0) 1) "_"
+                       (file-name-sans-extension (file-name-nondirectory icon-path)))))
+    (mode-icons-get-icon-display-xpm-replace icon-path lst name)))
 
 (defun mode-icons-get-icon-display (icon type &optional face)
   "Get the value for the display property of ICON having TYPE.
@@ -870,7 +876,6 @@ When ENABLE is non-nil, enable the changes to the mode line."
   :global t
   (if mode-icons-mode
       (progn
-        ;; (add-hook 'after-change-major-mode-hook 'mode-icons-set-current-mode-icon)
         (add-hook 'after-change-major-mode-hook #'mode-icons-reset)
         (mode-icons-fix t)
         (mode-icons-set-minor-mode-icon)
