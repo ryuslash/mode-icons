@@ -274,11 +274,21 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Black and White xpm that changes color to match the mode-line face" xpm-bw))))
   :group 'mode-icons)
 
+(defvar mode-icons-get-xpm-string (make-hash-table :test 'equal))
+(defun mode-icons-get-xpm-string (icon-path)
+  "Get XPM file contents for ICON-PATH.
+If ICON-PATH is a string, return that."
+  (or (and (file-exists-p icon-path)
+           (or (gethash icon-path mode-icons-get-xpm-string)
+               (puthash icon-path (with-temp-buffer (insert-file-contents icon-path) (buffer-string))
+                        mode-icons-get-xpm-string)))
+      (and (stringp icon-path) icon-path)))
+
 (defun mode-icons-get-icon-display-xpm-replace (icon-path rep-alist &optional name)
   "Get xpm image from ICON-PATH and reaplce REP-ALIST in file.
 When NAME is non-nil, also replace the internal xpm image name."
   (let ((case-fold-search t)
-        (img (with-temp-buffer (insert-file-contents icon-path) (buffer-string))))
+        (img (mode-icons-get-xpm-string icon-path)))
     (dolist (c rep-alist)
       (setq img (replace-regexp-in-string (regexp-quote (car c)) (cdr c) img t t)))
     (when name
@@ -299,7 +309,8 @@ If FACTOR is unspecified, use 0.5"
 
 (defun mode-icons-interpolate-from-scale (foreground background)
   "Interpolate black to FOREGROUND and white to BACKGROUND.
-Grayscales are in between."
+Grayscales are in between.
+Assumes that FOREGROUND and BACKGROUND are (r g b) lists."
   (let ((black '(0.0 0.0 0.0))
         (white '(1.0 1.0 1.0))
         lst tmp
@@ -329,6 +340,77 @@ Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
     (or (gethash sym mode-icons-get-icon-display-xpm-bw-face)
         (puthash sym (mode-icons-get-icon-display-xpm-replace icon-path lst name) mode-icons-get-icon-display-xpm-bw-face))))
 
+(defun mode-icons-get-xpm-icon-colors (icon-path)
+  "Get a list of rgb colors based on ICON-PATH xpm icon.
+ICON-PATH can be a XPM string or a XPM file."
+  (let (colors)
+    (with-temp-buffer
+      (insert (mode-icons-get-xpm-string icon-path))
+      (goto-char (point-min))
+      (while (re-search-forward "#[0-9A-Fa-f]\\{6\\}" nil t)
+        (push (color-name-to-rgb (match-string 0)) colors)))
+    colors))
+
+(defun mode-icons-desaturate-colors (colors &optional foreground background)
+  "Desaturate COLORS.
+
+If COLORS is an icon-path of an xpm file, use the colors from
+that file.
+
+When FOREGROUND and BACKGROUND are both non-nil, use
+`mode-icons-interpolate-from-scale' to change the grayscale to
+match the foreground (black) and background (white) colors.
+
+Assume that COLORS is a list of (r g b) values.
+
+Returns a replacement list for `mode-icons-get-icon-display-xpm-replace'"
+  (if (and colors (stringp colors))
+      (mode-icons-desaturate-colors (mode-icons-get-xpm-icon-colors colors) foreground background)
+    (let (color-list
+          val tmp
+          (trans-alist (and foreground background (mode-icons-interpolate-from-scale foreground background))))
+      (dolist (color colors)
+        (setq val (+ (* 0.3 (nth 0 color)) (* 0.59 (nth 1 color)) (* 0.11 (nth 2 color)))
+              val (color-rgb-to-hex val val val))
+        (when (and trans-alist (setq tmp (assoc val trans-alist)))
+          (setq val (cdr tmp)))
+        (push (cons (color-rgb-to-hex (nth 0 color) (nth 1 color) (nth 2 color)) val) color-list))
+      color-list)))
+
+(defun mode-icons-desaturate-xpm (icon-path &optional face)
+  "Desaturate the xpm at ICON-PATH.
+When FACE is non-nil, match the foreground and background colors
+in FACE instead of making the image black and white."
+  (let* ((background (color-name-to-rgb (face-background (or face 'mode-line))))
+         (foreground (color-name-to-rgb (face-foreground (or face 'mode-line))))
+         (lst (mode-icons-desaturate-colors icon-path foreground background))
+         (name (concat "mode_icons_desaturate_"
+                       (or (and background foreground
+                                (substring (mode-icons-interpolate background foreground 0.0) 1))
+                           "black") "_"
+                           (or (and background foreground
+                                    (substring (mode-icons-interpolate background foreground 1.0) 1))
+                               "white") "_"
+                       (file-name-sans-extension (file-name-nondirectory icon-path))))
+         (sym (intern name)))
+    (or (gethash sym mode-icons-get-icon-display-xpm-bw-face)
+        (puthash sym (mode-icons-get-icon-display-xpm-replace icon-path lst name) mode-icons-get-icon-display-xpm-bw-face))))
+
+
+(defcustom mode-icons-desaturate-inactive t
+  "Should the inactive mode-line be desaturated.
+And changed to match the icon colors?
+This only works with xpm files."
+  :type 'boolean
+  :group 'mode-icons)
+
+(defcustom mode-icons-desaturate-active nil
+  "Should the active mode-line be desaturated.
+And changed to match the icon colors?
+This only works with xpm files."
+  :type 'boolean
+  :group 'mode-icons)
+
 (defvar mode-icons-get-icon-display (make-hash-table :test 'equal)
   "Hash table of `mode-icons-get-icon-display'.")
 
@@ -341,20 +423,29 @@ the icon.
 
 FACE should be the face for rendering black and white xpm icons
 specified by type 'xpm-bw."
-  (let ((face (or face
-                  (and (mode-icons--selected-window-active)
-                       'mode-line)
-                  'mode-line-inactive)))
-    (or (gethash (list icon type face custom-enabled-themes) mode-icons-get-icon-display)
-        (puthash (list icon type face custom-enabled-themes)
+  (let* ((active (mode-icons--selected-window-active))
+         (face (or face (and active 'mode-line) 'mode-line-inactive))
+         (key (list icon type face active
+                    mode-icons-desaturate-inactive mode-icons-desaturate-active
+                    custom-enabled-themes)))
+    (or (gethash key mode-icons-get-icon-display)
+        (puthash key
                  (let ((icon-path (mode-icons-get-icon-file
                                    (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
                                                         (symbol-name type))))))
-                   (if (eq type 'xpm-bw)
+                   (cond
+                    ((eq type 'xpm-bw)
                        (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
                                      'xpm t :ascent 'center
-                                     :face face)
-                     `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center :face ',face)))
+                                     :face face))
+                    ((and (eq type 'xpm)
+                          (or (and active mode-icons-desaturate-active)
+                              (and (not active) mode-icons-desaturate-inactive)))
+                     (create-image (mode-icons-desaturate-xpm icon-path face)
+                                     'xpm t :ascent 'center
+                                     :face face))
+                    (t
+                     `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center :face ',face))))
                  mode-icons-get-icon-display))))
 
 (defcustom mode-icons-minor-mode-base-text-properties
@@ -602,10 +693,12 @@ FACE represents the face used when the icon is a xpm-bw image."
   (unless mode-icons-cached-mode-name
     (set (make-local-variable 'mode-icons-cached-mode-name)
          mode-name)
-    (set (make-local-variable 'mode-icons-mode-name-active)
-         (mode-icons-get-mode-icon mode 'mode-line))
-    (set (make-local-variable 'mode-icons-mode-name-inactive)
-         (mode-icons-get-mode-icon mode 'mode-line-inactive))
+    (let ((mode-icons-desaturate-inactive mode-icons-desaturate-active))
+      (set (make-local-variable 'mode-icons-mode-name-active)
+         (mode-icons-get-mode-icon mode 'mode-line)))
+    (let ((mode-icons-desaturate-active mode-icons-desaturate-inactive))
+      (set (make-local-variable 'mode-icons-mode-name-inactive)
+           (mode-icons-get-mode-icon mode 'mode-line-inactive)))
     (setq mode-name (mode-icons-get-mode-icon mode))))
 
 (defun mode-icons-major-mode-icons-undo ()
@@ -694,10 +787,10 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
 
 ;; focus-in-hook was introduced in emacs v24.4.
 ;; Gets evaluated in the last frame's environment.
-(add-hook 'focus-in-hook 'mode-icons--set-selected-window)
+;; (add-hook 'focus-in-hook 'mode-icons--set-selected-window)
 
 ;; focus-out-hook was introduced in emacs v24.4.
-(add-hook 'focus-out-hook 'mode-icons--unset-selected-window)
+;; (add-hook 'focus-out-hook 'mode-icons--unset-selected-window)
 
 ;; Executes after the window manager requests that the user's events
 ;; be directed to a different frame.
@@ -718,7 +811,7 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
   "Recolor MODE image based on if the window is ACTIVE."
   (let ((icon-spec (get-text-property 0 'mode-icons-p mode)))
     (cond
-     ((and icon-spec (eq (nth 2 icon-spec) 'xpm-bw))
+     ((and icon-spec (memq (nth 2 icon-spec) '(xpm xpm-bw)))
       (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
                                                              (or (and active 'mode-line)
                                                                  'mode-line-inactive))
