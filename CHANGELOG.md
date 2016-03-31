@@ -32,7 +32,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - C, C++, C#, PHP and Java modes match a wider variety of modes.  See
   (Issue #18).
 - Allow black and white xpm icons to match the mode-line face colors
-  (both active and inactive)
+  (both active and inactive, for major and minor modes)
+- Allow displaying the major mode name in the mode-line only, or both
+  the mode-line and in other buffers, like ibuffer.
+  - If the =mode-name= variable is changed, then anything that looks
+    at this variable will pick up the icon.
+  - This can be customized by the variable =mode-icons-change-mode-name=.
+  - This should be modified for packages like =powerline= and
+    =smart-mode-line=.
 
 ### Removed
 

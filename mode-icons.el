@@ -496,11 +496,12 @@ everywhere else."
    (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
    (and (image-type-available-p (nth 2 icon-spec)))))
 
-(defun mode-icons-propertize-mode (mode icon-spec)
+(defun mode-icons-propertize-mode (mode icon-spec &optional face)
   "Propertize MODE with ICON-SPEC.
 
 MODE should be a string, the name of the mode to propertize.
-ICON-SPEC should be a specification from `mode-icons'."
+ICON-SPEC should be a specification from `mode-icons'.
+FACE is the face to match when a xpm-bw image is used."
   (mode-icons-save-buffer-state ;; Otherwise may cause issues with trasient mark mode
    (cond
     ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
@@ -524,7 +525,8 @@ ICON-SPEC should be a specification from `mode-icons'."
                                                    (nth 1 icon-spec)))
        (put-text-property (point-min) (point-max) 'mode-icons-p icon-spec)
        (buffer-string)))
-    (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)) 'mode-icons-p icon-spec)))))
+    (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec) face)
+                   'mode-icons-p icon-spec)))))
 
 (defvar mode-icons-get-icon-spec (make-hash-table :test 'equal)
   "Hash table of icon-specifications.")
@@ -553,8 +555,17 @@ ICON-SPEC should be a specification from `mode-icons'."
   :type 'boolean
   :group 'mode-icons)
 
-(defun mode-icons-get-mode-icon (mode)
-  "Get the icon for MODE, if there is one."
+(defcustom mode-icons-change-mode-name t
+  "Change the `mode-name' variable.
+
+This allows functions like `ibuffer' or `helm-mode' to show the
+icon as well."
+  :type 'boolean
+  :group 'mode-icons)
+
+(defun mode-icons-get-mode-icon (mode &optional face)
+  "Get the icon for MODE, if there is one.
+FACE represents the face used when the icon is a xpm-bw image."
   (let* ((mode-name (format-mode-line mode))
          (icon-spec (mode-icons-get-icon-spec mode-name))
          ret)
@@ -562,7 +573,7 @@ ICON-SPEC should be a specification from `mode-icons'."
         (setq ret
               (if mode-icons-show-mode-name
                       (concat (mode-icons-propertize-mode mode-name icon-spec) " " mode-name)
-                    (mode-icons-propertize-mode mode-name icon-spec)))
+                    (mode-icons-propertize-mode mode-name icon-spec face)))
       (setq ret mode-name))
     ;; Don't hide major mode names...
     (when (string= ret "")
@@ -572,11 +583,21 @@ ICON-SPEC should be a specification from `mode-icons'."
 (defvar mode-icons-cached-mode-name nil
   "Cached mode name to restore when disabling mode-icons.")
 
+(defvar mode-icons-mode-name-active nil
+  "Active icon for `mode-name'.")
+
+(defvar mode-icons-mode-name-inactive nil
+  "Inactive icon for `mode-name'.")
+
 (defun mode-icons-set-mode-icon (mode)
   "Set the icon for MODE."
   (unless mode-icons-cached-mode-name
     (set (make-local-variable 'mode-icons-cached-mode-name)
          mode-name)
+    (set (make-local-variable 'mode-icons-mode-name-active)
+         (mode-icons-get-mode-icon mode 'mode-line))
+    (set (make-local-variable 'mode-icons-mode-name-inactive)
+         (mode-icons-get-mode-icon mode 'mode-line-inactive))
     (setq mode-name (mode-icons-get-mode-icon mode))))
 
 (defun mode-icons-major-mode-icons-undo ()
@@ -640,7 +661,10 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
 
 (defun mode-icons--generate-major-mode-item ()
   "Give rich strings needed for `major-mode' viewing."
-  (eval `(propertize ,mode-name ,@mode-icons-major-mode-base-text-properties)))
+  (let ((active (mode-icons--selected-window-active)))
+    (eval `(propertize ,(or (and active mode-icons-mode-name-active)
+                            mode-icons-mode-name-inactive)
+                       ,@mode-icons-major-mode-base-text-properties))))
 
 ;;; selected take from powerline
 (defvar mode-icons--selected-window (frame-selected-window)

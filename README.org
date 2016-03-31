@@ -28,6 +28,20 @@ Some of the modes that have icons instead of names now:
 | Slim       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/slim.png]]   |
 | YAML       | [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/icons/yaml.png]]   |
 
+When looking at buffers with commands like ~ibuffer~, they display the
+icons for the mode names as well. If you don't like this behavior you
+can change ~mode-icons-change-mode-name~ to be nil:
+
+#+BEGIN_SRC emacs-lisp
+(setq mode-icons-change-mode-name nil)
+#+END_SRC
+
+This only displays the icon in the plain emacs mode-line.
+
+This may not work with enhanced mode-lines like ~poweline~ or
+~smart-mode-line~, sicne they typically look at the ~mode-name~
+variable.
+
 * Requirements
 
   As of version 0.3.0 you can also use icons from some icon fonts,
@@ -42,7 +56,6 @@ Some of the modes that have icons instead of names now:
   these fonts, mode-icons will not do this for you.
 
 * Installation
-
 ** manually
 
    Place ~mode-icons.el~ somewhere in your =load-path= and copy the
