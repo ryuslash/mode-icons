@@ -325,8 +325,7 @@ Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
          (name (concat "mode_icons_bw_" (substring (mode-icons-interpolate background foreground 0.0) 1) "_"
                        (substring (mode-icons-interpolate background foreground 1.0) 1) "_"
                        (file-name-sans-extension (file-name-nondirectory icon-path))))
-         (sym (intern name))
-         ret)
+         (sym (intern name)))
     (or (gethash sym mode-icons-get-icon-display-xpm-bw-face)
         (puthash sym (mode-icons-get-icon-display-xpm-replace icon-path lst name) mode-icons-get-icon-display-xpm-bw-face))))
 
