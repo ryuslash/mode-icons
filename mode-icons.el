@@ -342,17 +342,21 @@ the icon.
 
 FACE should be the face for rendering black and white xpm icons
 specified by type 'xpm-bw."
-  (or (gethash (list icon type (or face 'mode-line)) mode-icons-get-icon-display)
-      (puthash (list icon type (or face 'mode-line))
-               (let ((icon-path (mode-icons-get-icon-file
-                                 (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
-                                                      (symbol-name type))))))
-                 (if (eq type 'xpm-bw)
-                     (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
-                                   'xpm t :ascent 'center
-                                   :face (or face 'mode-line))
-                   `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center)))
-               mode-icons-get-icon-display)))
+  (let ((face (or face
+                  (and (mode-icons--selected-window-active)
+                       'mode-line)
+                  'mode-line-inactive)))
+    (or (gethash (list icon type face) mode-icons-get-icon-display)
+        (puthash (list icon type face)
+                 (let ((icon-path (mode-icons-get-icon-file
+                                   (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
+                                                        (symbol-name type))))))
+                   (if (eq type 'xpm-bw)
+                       (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
+                                     'xpm t :ascent 'center
+                                     :face face)
+                     `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center)))
+                 mode-icons-get-icon-display))))
 
 (defcustom mode-icons-minor-mode-base-text-properties
   '('help-echo nil
@@ -525,7 +529,12 @@ FACE is the face to match when a xpm-bw image is used."
                                                    (nth 1 icon-spec)))
        (put-text-property (point-min) (point-max) 'mode-icons-p icon-spec)
        (buffer-string)))
-    (t (propertize (format "%s" mode) 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec) face)
+    (t (propertize (format "%s" mode) 'display
+                   (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
+                                                (or face
+                                                    (and (mode-icons--selected-window-active)
+                                                         'mode-line)
+                                                    'mode-line-inactive))
                    'mode-icons-p icon-spec)))))
 
 (defvar mode-icons-get-icon-spec (make-hash-table :test 'equal)
