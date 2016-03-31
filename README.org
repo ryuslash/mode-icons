@@ -39,7 +39,7 @@ can change ~mode-icons-change-mode-name~ to be nil:
 This only displays the icon in the plain emacs mode-line.
 
 This may not work with enhanced mode-lines like ~poweline~ or
-~smart-mode-line~, sicne they typically look at the ~mode-name~
+~smart-mode-line~, since they typically look at the ~mode-name~
 variable.
 
 * Requirements
