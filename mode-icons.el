@@ -345,8 +345,8 @@ specified by type 'xpm-bw."
                   (and (mode-icons--selected-window-active)
                        'mode-line)
                   'mode-line-inactive)))
-    (or (gethash (list icon type face) mode-icons-get-icon-display)
-        (puthash (list icon type face)
+    (or (gethash (list icon type face custom-enabled-themes) mode-icons-get-icon-display)
+        (puthash (list icon type face custom-enabled-themes)
                  (let ((icon-path (mode-icons-get-icon-file
                                    (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
                                                         (symbol-name type))))))
@@ -354,7 +354,7 @@ specified by type 'xpm-bw."
                        (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
                                      'xpm t :ascent 'center
                                      :face face)
-                     `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center)))
+                     `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center :face ',face)))
                  mode-icons-get-icon-display))))
 
 (defcustom mode-icons-minor-mode-base-text-properties
@@ -991,7 +991,7 @@ When ENABLE is non-nil, enable the changes to the mode line."
     (mode-icons-set-current-mode-icon)
     ;; FIXME -- undo to allow `ergoemacs-mode' and color changing
     ;; XPMs.  Seems a bit heavy handed.
-    ;; (mode-icons-set-minor-mode-icon-undo t)
+    (mode-icons-set-minor-mode-icon-undo t)
     (mode-icons-set-minor-mode-icon)))
 
 (defun mode-icons-reset ()
