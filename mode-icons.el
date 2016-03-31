@@ -648,22 +648,24 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'."
 (defun mode-icons-set-minor-mode-icon (&optional dont-update)
   "Set the icon for the minor modes.
 When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
-  (let (icon-spec mode-name minor)
+  (let (icon-spec mode-name minor cur-mode)
     (dolist (mode minor-mode-alist)
-      (unless (assq (car mode) mode-icons-set-minor-mode-icon-alist)
-        (setq mode-name (format-mode-line mode)
-              icon-spec (mode-icons-get-icon-spec mode-name))
-        (when icon-spec
-          (setq minor (assq (car mode) minor-mode-alist))
-          (when minor
+      (setq cur-mode
             (or (assq (car mode) mode-icons-set-minor-mode-icon-alist)
+                mode))
+      (setq mode-name (format-mode-line cur-mode)
+            icon-spec (mode-icons-get-icon-spec mode-name))
+      (when icon-spec
+          (setq minor (assq (car cur-mode) minor-mode-alist))
+          (when minor
+            (or (assq (car cur-mode) mode-icons-set-minor-mode-icon-alist)
                 (push (copy-sequence minor) mode-icons-set-minor-mode-icon-alist))
             (setq mode-name (replace-regexp-in-string "^ " "" mode-name)
                   mode-name (mode-icons-propertize-mode mode-name icon-spec))
             (if (string= "" mode-name)
                 (setcdr minor (list ""))
               (setcdr minor (list (concat (or (and mode-icons-separate-images-with-spaces " ") "")
-                                          mode-name)))))))))
+                                          mode-name))))))))
   (unless dont-update
     (force-mode-line-update)))
 
@@ -989,9 +991,6 @@ When ENABLE is non-nil, enable the changes to the mode line."
   (interactive)
   (when (and mode-icons-mode (not (minibufferp)))
     (mode-icons-set-current-mode-icon)
-    ;; FIXME -- undo to allow `ergoemacs-mode' and color changing
-    ;; XPMs.  Seems a bit heavy handed.
-    (mode-icons-set-minor-mode-icon-undo t)
     (mode-icons-set-minor-mode-icon)))
 
 (defun mode-icons-reset ()
