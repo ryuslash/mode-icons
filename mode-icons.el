@@ -411,6 +411,11 @@ This only works with xpm files."
   :type 'boolean
   :group 'mode-icons)
 
+(defcustom mode-icons-grayscale-transform t
+  "Should grayscale 'xpm-bw images match mode-line colors?"
+  :type 'boolean
+  :group 'mode-icons)
+
 (defvar mode-icons-get-icon-display (make-hash-table :test 'equal)
   "Hash table of `mode-icons-get-icon-display'.")
 
@@ -427,17 +432,19 @@ specified by type 'xpm-bw."
          (face (or face (and active 'mode-line) 'mode-line-inactive))
          (key (list icon type face active
                     mode-icons-desaturate-inactive mode-icons-desaturate-active
-                    custom-enabled-themes)))
+                    mode-icons-grayscale-transform custom-enabled-themes)))
     (or (gethash key mode-icons-get-icon-display)
         (puthash key
                  (let ((icon-path (mode-icons-get-icon-file
                                    (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
                                                         (symbol-name type))))))
                    (cond
-                    ((eq type 'xpm-bw)
+                    ((and mode-icons-grayscale-transform (eq type 'xpm-bw))
                        (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
                                      'xpm t :ascent 'center
                                      :face face))
+                    ((eq type 'xpm-bw)
+                     `(image :type xpm :file ,icon-path :ascent center :face ',face))
                     ((and (eq type 'xpm)
                           (or (and active mode-icons-desaturate-active)
                               (and (not active) mode-icons-desaturate-inactive)))
