@@ -807,22 +807,48 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
   "Return whether the current window is active."
   (eq mode-icons--selected-window (selected-window)))
 
-(defun mode-icons--recolor-minor-mode-image (mode active)
-  "Recolor MODE image based on if the window is ACTIVE."
+(defun mode-icons--property-substrings (str prop)
+  "Return a list of substrings of STR when PROP change."
+  ;; Taken from powerline by Donald Ephraim Curtis, Jason Milkins and
+  ;; Nicolas Rougier
+  (let ((beg 0) (end 0)
+        (len (length str))
+        (out))
+    (while (< end (length str))
+      (setq end (or (next-single-property-change beg prop str) len))
+      (setq out (append out (list (substring str beg (setq beg end))))))
+    out))
+
+(defun mode-icons--recolor-string (string &optional active face)
+  "Recolor `mode-icons' in STRING."
+  (let* ((active (and (not face) (or active (mode-icons--selected-window-active)))))
+    (mapconcat
+     (lambda(str)
+       (if (get-text-property 0 'display str)
+           (mode-icons--recolor-minor-mode-image str active)
+         str))
+     (mode-icons--property-substrings string 'mode-icons-p)
+     "")))
+
+(defun mode-icons--recolor-minor-mode-image (mode active &optional face)
+  "Recolor MODE image based on if the window is ACTIVE.
+Use FAEC when specified."
   (let ((icon-spec (get-text-property 0 'mode-icons-p mode)))
     (cond
      ((and icon-spec (memq (nth 2 icon-spec) '(xpm xpm-bw)))
       (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
-                                                             (or (and active 'mode-line)
+                                                             (or face
+                                                                 (and active 'mode-line)
                                                                  'mode-line-inactive))
                   'mode-icons-p icon-spec))
      (t mode))))
 
-(defun mode-icons--generate-minor-mode-list ()
-  "Extracts all rich strings necessary for the minor mode list."
+(defun mode-icons--generate-minor-mode-list (&optional face)
+  "Extracts all rich strings necessary for the minor mode list.
+When FACE is non-nil, use FACE to render the `minor-mode-alist.'"
   (let ((active (mode-icons--selected-window-active)))
     (delete " " (delete "" (mapcar (lambda(mode)
-                                     (concat " " (eval `(propertize ,(mode-icons--recolor-minor-mode-image mode active)
+                                     (concat " " (eval `(propertize ,(mode-icons--recolor-minor-mode-image mode active face)
                                                                     ,@mode-icons-minor-mode-base-text-properties))))
                                    (split-string (format-mode-line minor-mode-alist)))))))
 
@@ -1091,7 +1117,25 @@ When ENABLE is non-nil, enable the changes to the mode line."
   (interactive)
   (run-with-idle-timer 0.1 nil #'mode-icons-reset-now))
 
+
+;; (defadvice powerline-minor-modes (around mode-icons-advice (&optional face pad) activate)
+;;   "Enable icon color changes in `powerline-minor-modes'."
+;;   (mode-icons--recolor-string (progn ad-do-it) nil face))
+
 (add-hook 'emacs-startup-hook #'mode-icons-reset)
+
+(eval-after-load 'powerline
+  '(progn
+     (declare-function mode-icons--real-powerline-minor-modes "powerline")
+     (fset 'mode-icons--real-powerline-minor-modes (symbol-function #'powerline-minor-modes))
+     (defun mode-icons--powerline-minor-modes (&optional face pad)
+       "Powerline minor modes is replaced by this function.
+FACE is the face to use.
+PAD is the padding around the minor modes."
+       (if mode-icons-mode
+           (powerline-raw (format-mode-line (mode-icons--generate-minor-mode-list face) face) face pad)
+         (mode-icons--real-powerline-minor-modes face pad)))
+     (fset 'powerline-minor-modes (symbol-function #'mode-icons--powerline-minor-modes))))
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
