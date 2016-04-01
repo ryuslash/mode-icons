@@ -236,7 +236,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Conf" #xf1de FontAwesome)
     ("\\`Fundamental\\'" #xf016 FontAwesome)
     ("\\`Javascript-IDE\\'" "js" xpm)
-    ("\\` Undo-Tree\\'" ":herb:" emoji)
+    ("\\` Undo-Tree\\'" ":palm_tree:" emoji)
     ;; Diminished modes
     ("\\` \\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil))
   "Icons for major and minor modes.
@@ -320,8 +320,8 @@ Assumes that FOREGROUND and BACKGROUND are (r g b) lists."
         (i 0))
     (while (< i 256)
       (setq tmp (/ i 255.0))
-      (push (cons (mode-icons-interpolate black white tmp)
-                  (mode-icons-interpolate foreground background tmp)) lst)
+      (push (cons (upcase (mode-icons-interpolate black white tmp))
+                  (upcase (mode-icons-interpolate foreground background tmp))) lst)
       (setq i (1+ i)))
     lst))
 
@@ -374,10 +374,10 @@ Returns a replacement list for `mode-icons-get-icon-display-xpm-replace'"
           (trans-alist (and foreground background (mode-icons-interpolate-from-scale foreground background))))
       (dolist (color colors)
         (setq val (+ (* 0.3 (nth 0 color)) (* 0.59 (nth 1 color)) (* 0.11 (nth 2 color)))
-              val (color-rgb-to-hex val val val))
+              val (upcase (color-rgb-to-hex val val val)))
         (when (and trans-alist (setq tmp (assoc val trans-alist)))
           (setq val (cdr tmp)))
-        (push (cons (color-rgb-to-hex (nth 0 color) (nth 1 color) (nth 2 color)) val) color-list))
+        (push (cons (upcase (color-rgb-to-hex (nth 0 color) (nth 1 color) (nth 2 color))) val) color-list))
       color-list)))
 
 (defun mode-icons-desaturate-xpm (icon-path &optional face)
@@ -595,8 +595,9 @@ everywhere else."
   "Determine if ICON-SPEC is suppored on your system."
   (or
    (and (or (eq (nth 2 icon-spec) nil) (eq (nth 1 icon-spec) nil)) t)
-   (and (eq (nth 2 icon-spec) 'emoji) (image-type-available-p 'png)
-        (featurep 'emojify))
+   (and (eq (nth 2 icon-spec) 'emoji)
+        (or (and (image-type-available-p 'png) (featurep 'emojify))
+            (and (image-type-available-p 'xpm) (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))))
    (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
@@ -605,6 +606,160 @@ everywhere else."
 (defvar emojify-image-dir)
 
 (defvar emojify-emojis)
+
+(defvar mode-icons--gimp (executable-find "gimp")
+  "Gimp to convert png to xpm.")
+
+(defvar mode-icons--gimp-inferior-args "-i -d -f -b -")
+
+(defvar mode-icons--stop-gimp-after 120
+  "Seconds of idle time before mode-icons gimp is stopped.")
+
+(defvar mode-icons--stop-gimp-timer nil)
+
+(defun mode-icons--pop-to-buffer-same-window (_buffer &optional _norecord)
+  "Ignore `pop-to-buffer-same-window' command."
+  t)
+
+(defun mode-icons--start-gimp-inferior ()
+  "GIMP inferior process."
+  (interactive)
+  (when (file-exists-p mode-icons--gimp)
+    (unless (get-buffer "*mode-icons-gimp*")
+      (letf (((symbol-function 'pop-to-buffer-same-window) #'mode-icons--pop-to-buffer-same-window))
+        (save-excursion
+          (run-scheme  (format "\"%s\" %s" mode-icons--gimp mode-icons--gimp-inferior-args))))
+      (with-current-buffer (get-buffer "*scheme*")
+        (rename-buffer "*mode-icons-gimp*")))))
+
+(defvar mode-icons--gimp-ready-p nil)
+
+(defun mode-icons--gimp-ready-p ()
+  "Determine if GIMP inferior process is ready."
+  (if (file-exists-p mode-icons--gimp)
+      (or mode-icons--gimp-ready-p
+          (let (buf)
+            (mode-icons--start-gimp-inferior)
+            (and (setq buf (get-buffer "*mode-icons-gimp*"))
+                 (with-current-buffer buf
+                   (goto-char (point-min))
+                   (when (re-search-forward "ts>" nil t)
+                     (setq mode-icons--gimp-ready-p t))))))))
+
+(defun mode-icons--process-gimp (scm)
+  "Process gimp SCM (scheme)."
+  (when mode-icons--stop-gimp-timer
+    (cancel-timer mode-icons--stop-gimp-timer))
+  (when (file-exists-p mode-icons--gimp)
+    (if (mode-icons--gimp-ready-p)
+        (progn
+          (comint-send-string
+           (with-current-buffer (get-buffer "*mode-icons-gimp*"))
+           (concat scm "\n"))
+          (when mode-icons--stop-gimp-after
+            (setq mode-icons--stop-gimp-timer (run-with-timer mode-icons--stop-gimp-after nil #'mode-icons-stop-gimp-inferior))))
+      (run-with-idle-timer 1 nil #'mode-icons--process-gimp scm))))
+
+(defvar mode-icons--stop-gimp-inferior nil)
+(defun mode-icons--stop-gimp-inferior ()
+  "Stop the inferior gimp process."
+  (interactive)
+  (when (file-exists-p mode-icons--gimp)
+    (let ((buf (get-buffer "*mode-icons-gimp*")))
+      (cond
+     ((and (mode-icons--gimp-ready-p) buf
+           (get-buffer-process buf))
+      (mode-icons--process-gimp "(gimp-quit 0)")
+      (setq mode-icons--gimp-ready-p nil
+            mode-icons--stop-gimp-inferior t)
+      (run-with-idle-timer 1 nil #'mode-icons--stop-gimp-inferior))
+     ((and buf (not (get-buffer-process buf)))
+      (kill-buffer (get-buffer "*mode-icons-gimp*")))
+     (t (run-with-idle-timer 1 nil #'mode-icons--stop-gimp-inferior))))))
+
+(defvar mode-icons--png-to-xpm-gimp-script
+  (replace-regexp-in-string
+   "[ \n\t]+" " "
+   "(let* ((png-image \"%s\")
+       (xpm-image \"%s\")
+       (image (car (file-png-load RUN-NONINTERACTIVE png-image png-image)))
+       (drawable (car (gimp-image-get-active-layer image)))
+       (width (car (gimp-image-width image)))
+       (height (car (gimp-image-height image)))
+       (new-height 16.0)
+       (new-width (inexact->exact (round (* width (/ new-height height))))))
+  (gimp-image-resize image 16 new-width 0 0)
+  (set! drawable (car (gimp-image-get-active-layer image)))
+  (file-xpm-save RUN-NONINTERACTIVE image drawable xpm-image xpm-image 127))")
+  "Gimp scheme script to convert png to xpm.")
+
+(defvar mode-icons--convert-png-to-xpm (make-hash-table :test 'equal)
+  "Hash table to make sure you only convert once.")
+
+(setq mode-icons--convert-png-to-xpm (make-hash-table :test 'equal))
+
+(defun mode-icons--convert-png-to-xpm (png xpm)
+  "Covert PNG to a ?x16 XPM using `mode-icons--gimp'."
+  (when (and mode-icons--gimp (file-exists-p mode-icons--gimp)
+             xpm (not (gethash (list png xpm) mode-icons--convert-png-to-xpm))
+             (not (file-exists-p xpm)))
+    (mode-icons--process-gimp (format mode-icons--png-to-xpm-gimp-script png xpm))))
+
+(defun mode-icons--get-emoji-xpm-file (icon-spec &optional icon-name)
+  "Get the emoji xpm file name from ICON-SPEC.
+This only supports emoji enclosed in a \":\" like :herb:.
+
+When ICON-NAME is non-nil, return the mode-icons icon name.
+For :herb: it would be e-herb."
+  (let* ((xpm-base (nth 1 icon-spec))
+         file)
+    (when (char-equal (aref xpm-base 0) ?:)
+      (setq file (substring xpm-base 1))
+      (when (char-equal (aref (substring xpm-base -1) 0) ?:)
+        (setq file (substring file 0 -1))
+        (if icon-name
+            (concat "e-" file)
+          (mode-icons-get-icon-file (concat "e-" file ".xpm")))))))
+
+(defun mode-icons--get-emoji (mode icon-spec &optional face)
+  "Get MODE emoji for ICON-SPEC using FACE."
+  (let* ((xpm (mode-icons--get-emoji-xpm-file icon-spec))
+         (xpm-name (mode-icons--get-emoji-xpm-file icon-spec t))
+         (xpm-p (file-readable-p xpm)))
+    (if xpm-p
+        (propertize (format "%s" mode) 'display
+                    (mode-icons-get-icon-display
+                     xpm-name 'xpm
+                     (or face
+                         (and (mode-icons--selected-window-active)
+                              'mode-line)
+                         'mode-line-inactive))
+                    'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm))
+      (unless emojify-emojis
+        (emojify-set-emoji-data))
+      (let* ((emoji (ht-get emojify-emojis (nth 1 icon-spec)))
+             (image-file (expand-file-name (ht-get emoji "image") emojify-image-dir))
+             (image-type (intern (upcase (file-name-extension image-file)))))
+        (if (not (file-exists-p image-file))
+            (propertize (format "%s" mode)
+                        'mode-icons-p icon-spec)
+          (mode-icons--convert-png-to-xpm image-file xpm)
+          (propertize (format "%s" mode)
+                      'display
+                      (create-image image-file
+                                    ;; use imagemagick if available and supports PNG images
+                                    ;; (allows resizing images)
+                                    (when (and (fboundp 'imagemagick-types)
+                                               (memq image-type (imagemagick-types)))
+                                      'imagemagick)
+                                    nil
+                                    :ascent 'center
+                                    :heuristic-mask t
+                                    :face face
+                                    ;; :background (emojify--get-image-background beg end)
+                                    ;; no-op if imagemagick is not available
+                                    :height (emojify-default-font-height))
+                      'mode-icons-p icon-spec))))))
 
 (defun mode-icons-propertize-mode (mode icon-spec &optional face)
   "Propertize MODE with ICON-SPEC.
@@ -636,29 +791,7 @@ FACE is the face to match when a xpm-bw image is used."
        (put-text-property (point-min) (point-max) 'mode-icons-p icon-spec)
        (buffer-string)))
     ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'emoji))
-     (unless emojify-emojis
-       (emojify-set-emoji-data))
-     (let* ((emoji (ht-get emojify-emojis (nth 1 icon-spec)))
-            (image-file (expand-file-name (ht-get emoji "image") emojify-image-dir))
-            (image-type (intern (upcase (file-name-extension image-file)))))
-       (if (file-exists-p image-file)
-           (propertize (format "%s" mode)
-                       'display
-                       (create-image image-file
-                                     ;; use imagemagick if available and supports PNG images
-                                     ;; (allows resizing images)
-                                     (when (and (fboundp 'imagemagick-types)
-                                                (memq image-type (imagemagick-types)))
-                                       'imagemagick)
-                                     nil
-                                     :ascent 'center
-                                     :heuristic-mask t
-                                     ;; :background (emojify--get-image-background beg end)
-                                     ;; no-op if imagemagick is not available
-                                     :height (emojify-default-font-height))
-                       'mode-icons-p icon-spec)
-         (propertize (format "%s" mode)
-                       'mode-icons-p icon-spec))))
+     (mode-icons--get-emoji mode icon-spec face))
     (t (propertize (format "%s" mode) 'display
                    (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
                                                 (or face
@@ -672,21 +805,25 @@ FACE is the face to match when a xpm-bw image is used."
 (defun mode-icons-get-icon-spec (mode)
   "Get icon spec for MODE based on regular expression."
   (or (gethash mode mode-icons-get-icon-spec)
-      (puthash mode (let (case-fold-search)
-                      (catch 'found-mode
-                        (dolist (item mode-icons)
-                          (when (and (mode-icons-supported-p item)
-                                     (or
-                                      (and
-                                       (stringp (car item))
-                                       (stringp mode)
-                                       (string-match-p (car item) mode))
-                                      (and
-                                       (symbolp (car item))
-                                       (symbolp mode)
-                                       (eq mode (car item)))))
-                            (throw 'found-mode item)))
-                        nil))
+      (puthash mode (let* (case-fold-search
+                           (icon-spec (catch 'found-mode
+                                        (dolist (item mode-icons)
+                                          (when (and (mode-icons-supported-p item)
+                                                     (or
+                                                      (and
+                                                       (stringp (car item))
+                                                       (stringp mode)
+                                                       (string-match-p (car item) mode))
+                                                      (and
+                                                       (symbolp (car item))
+                                                       (symbolp mode)
+                                                       (eq mode (car item)))))
+                                            (throw 'found-mode item)))
+                                        nil)))
+                      (when (and icon-spec (eq (nth 2 icon-spec) 'emoji)
+                                 (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))
+                        (setq icon-spec (list (nth 0 icon-spec) (mode-icons--get-emoji-xpm-file icon-spec t) 'xpm)))
+                      icon-spec)
                mode-icons-get-icon-spec)))
 
 (defcustom mode-icons-show-mode-name nil
@@ -878,10 +1015,20 @@ Use FACE when specified."
   (let ((icon-spec (get-text-property 0 'mode-icons-p mode)))
     (cond
      ((and icon-spec (memq (nth 2 icon-spec) '(xpm xpm-bw)))
-      (propertize mode 'display (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
-                                                             (or face
-                                                                 (and active 'mode-line)
-                                                                 'mode-line-inactive))
+      (propertize mode 'display (mode-icons-get-icon-display
+                                 (nth 1 icon-spec) (nth 2 icon-spec)
+                                 (or face
+                                     (and active 'mode-line)
+                                     'mode-line-inactive))
+                  'mode-icons-p icon-spec))
+     ((and icon-spec (memq (nth 2 icon-spec) '(emoji))
+           (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))
+      (propertize mode 'display (mode-icons-get-icon-display
+                                 (mode-icons--get-emoji-xpm-file icon-spec t)
+                                 'xpm
+                                 (or face
+                                     (and active 'mode-line)
+                                     'mode-line-inactive))
                   'mode-icons-p icon-spec))
      (t mode))))
 
@@ -1149,6 +1296,7 @@ When ENABLE is non-nil, enable the changes to the mode line."
 
 (defun mode-icons-reset-hash ()
   "Reset `mode-icons-get-icon-spec' and `mode-icons-get-icon-display'."
+  (interactive)
   (setq mode-icons-get-icon-spec (make-hash-table :test 'equal)
         mode-icons-get-icon-display (make-hash-table :test 'equal)))
 
