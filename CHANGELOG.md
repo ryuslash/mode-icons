@@ -42,6 +42,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
     =smart-mode-line=.
 - Allow desaturating and matching the mode-line face colors for xpm
   images.
+- Allow emojis to be used as mode-icons
 
 ### Removed
 

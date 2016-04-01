@@ -68,6 +68,7 @@
 
 (require 'cl-lib)
 (require 'color)
+(require 'emojify nil t)
 
 (defgroup mode-icons nil
   "Provide icons for major modes."
@@ -235,9 +236,9 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Conf" #xf1de FontAwesome)
     ("\\`Fundamental\\'" #xf016 FontAwesome)
     ("\\`Javascript-IDE\\'" "js" xpm)
+    ("\\` Undo-Tree\\'" ":herb:" emoji)
     ;; Diminished modes
-    ("\\` \\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil)
-    )
+    ("\\` \\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil))
   "Icons for major and minor modes.
 
 Each specificatioun is a list with the first element being the
@@ -254,7 +255,8 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Locked By Someone Else" steal)
                  (const :tag "Apple" apple)
                  (const :tag "Windows" win)
-                 (const :tag "Unix" unix))
+                 (const :tag "Unix" unix)
+                 (function :tag "Enriched minor mode"))
                 (choice
                  (string :tag "Icon Name")
                  (integer :tag "Font Glyph Code")
@@ -271,7 +273,8 @@ without the extension.  And the third being the type of icon."
                  (const :tag "jpg" jpg)
                  (const :tag "xbm" xbm)
                  (const :tag "xpm" xpm)
-                 (const :tag "Black and White xpm that changes color to match the mode-line face" xpm-bw))))
+                 (const :tag "Black and White xpm that changes color to match the mode-line face" xpm-bw)
+                 (const :tag "Emoji" emoji))))
   :group 'mode-icons)
 
 (defvar mode-icons-get-xpm-string (make-hash-table :test 'equal))
@@ -592,10 +595,16 @@ everywhere else."
   "Determine if ICON-SPEC is suppored on your system."
   (or
    (and (or (eq (nth 2 icon-spec) nil) (eq (nth 1 icon-spec) nil)) t)
+   (and (eq (nth 2 icon-spec) 'emoji) (image-type-available-p 'png)
+        (featurep 'emojify))
    (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
    (and (image-type-available-p (nth 2 icon-spec)))))
+
+(defvar emojify-image-dir)
+
+(defvar emojify-emojis)
 
 (defun mode-icons-propertize-mode (mode icon-spec &optional face)
   "Propertize MODE with ICON-SPEC.
@@ -626,6 +635,30 @@ FACE is the face to match when a xpm-bw image is used."
                                                    (nth 1 icon-spec)))
        (put-text-property (point-min) (point-max) 'mode-icons-p icon-spec)
        (buffer-string)))
+    ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'emoji))
+     (unless emojify-emojis
+       (emojify-set-emoji-data))
+     (let* ((emoji (ht-get emojify-emojis (nth 1 icon-spec)))
+            (image-file (expand-file-name (ht-get emoji "image") emojify-image-dir))
+            (image-type (intern (upcase (file-name-extension image-file)))))
+       (if (file-exists-p image-file)
+           (propertize (format "%s" mode)
+                       'display
+                       (create-image image-file
+                                     ;; use imagemagick if available and supports PNG images
+                                     ;; (allows resizing images)
+                                     (when (and (fboundp 'imagemagick-types)
+                                                (memq image-type (imagemagick-types)))
+                                       'imagemagick)
+                                     nil
+                                     :ascent 'center
+                                     :heuristic-mask t
+                                     ;; :background (emojify--get-image-background beg end)
+                                     ;; no-op if imagemagick is not available
+                                     :height (emojify-default-font-height))
+                       'mode-icons-p icon-spec)
+         (propertize (format "%s" mode)
+                       'mode-icons-p icon-spec))))
     (t (propertize (format "%s" mode) 'display
                    (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
                                                 (or face
@@ -827,7 +860,9 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
     out))
 
 (defun mode-icons--recolor-string (string &optional active face)
-  "Recolor `mode-icons' in STRING."
+  "Recolor `mode-icons' in STRING.
+ACTIVE tells if the current window is active.
+FACE is the face to recolor the icon to."
   (let* ((active (and (not face) (or active (mode-icons--selected-window-active)))))
     (mapconcat
      (lambda(str)
@@ -839,7 +874,7 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
 
 (defun mode-icons--recolor-minor-mode-image (mode active &optional face)
   "Recolor MODE image based on if the window is ACTIVE.
-Use FAEC when specified."
+Use FACE when specified."
   (let ((icon-spec (get-text-property 0 'mode-icons-p mode)))
     (cond
      ((and icon-spec (memq (nth 2 icon-spec) '(xpm xpm-bw)))
@@ -1112,6 +1147,11 @@ When ENABLE is non-nil, enable the changes to the mode line."
     (mode-icons-major-mode-icons-undo)
     (mode-icons-fix)))
 
+(defun mode-icons-reset-hash ()
+  "Reset `mode-icons-get-icon-spec' and `mode-icons-get-icon-display'."
+  (setq mode-icons-get-icon-spec (make-hash-table :test 'equal)
+        mode-icons-get-icon-display (make-hash-table :test 'equal)))
+
 (defun mode-icons-reset-now ()
   "Reset mode-icons icons."
   (interactive)
@@ -1143,6 +1183,10 @@ PAD is the padding around the minor modes."
            (powerline-raw (format-mode-line (mode-icons--generate-minor-mode-list face) face) face pad)
          (mode-icons--real-powerline-minor-modes face pad)))
      (fset 'powerline-minor-modes (symbol-function #'mode-icons--powerline-minor-modes))))
+
+(eval-after-load 'emojify
+  '(progn
+     (mode-icons-reset-hash)))
 
 (provide 'mode-icons)
 ;;; mode-icons.el ends here
