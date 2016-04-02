@@ -991,7 +991,7 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
   "Give rich strings needed for `major-mode' viewing."
   (let ((active (mode-icons--selected-window-active)))
     (eval `(propertize ,(or (and active mode-icons-mode-name-active)
-                            mode-icons-mode-name-inactive)
+                            mode-icons-mode-name-inactive mode-name)
                        ,@mode-icons-major-mode-base-text-properties))))
 
 ;;; selected take from powerline
