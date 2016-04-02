@@ -597,11 +597,14 @@ everywhere else."
    (and (or (eq (nth 2 icon-spec) nil) (eq (nth 1 icon-spec) nil)) t)
    (and (eq (nth 2 icon-spec) 'emoji)
         (or (and (image-type-available-p 'png) (featurep 'emojify))
-            (and (image-type-available-p 'xpm) (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))))
-   (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+            (and (image-type-available-p 'xpm)
+                 (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))))
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
-   (and (image-type-available-p (nth 2 icon-spec)))))
+   (or (image-type-available-p (nth 2 icon-spec))
+       (and (eq (nth 2 icon-spec) 'png)
+            (and (image-type-available-p 'xpm)
+                 (file-exists-p (mode-icons--get-png-xpm-file icon-spec))))) ))
 
 (defvar emojify-image-dir)
 
@@ -705,6 +708,14 @@ everywhere else."
              (not (file-exists-p xpm)))
     (mode-icons--process-gimp (format mode-icons--png-to-xpm-gimp-script png xpm))))
 
+(defun mode-icons--get-png-xpm-file (icon-spec &optional icon-name)
+  "Get the png->xpm file name from ICON-SPEC.
+
+When ICON-NAME is non-nil, return the mode-icons icon name."
+  (if icon-name
+      (nth 1 icon-spec)
+    (mode-icons-get-icon-file (concat (nth 1 icon-spec) ".xpm"))))
+
 (defun mode-icons--get-emoji-xpm-file (icon-spec &optional icon-name)
   "Get the emoji xpm file name from ICON-SPEC.
 This only supports emoji enclosed in a \":\" like :herb:.
@@ -712,7 +723,7 @@ This only supports emoji enclosed in a \":\" like :herb:.
 When ICON-NAME is non-nil, return the mode-icons icon name.
 For :herb: it would be e-herb."
   (let* ((xpm-base (nth 1 icon-spec))
-         file)
+         )
     (when (char-equal (aref xpm-base 0) ?:)
       (setq file (substring xpm-base 1))
       (when (char-equal (aref (substring xpm-base -1) 0) ?:)
@@ -720,6 +731,41 @@ For :herb: it would be e-herb."
         (if icon-name
             (concat "e-" file)
           (mode-icons-get-icon-file (concat "e-" file ".xpm")))))))
+
+(defun mode-icons--get-png (mode icon-spec &optional face)
+  "Get MODE for png ICON-SPEC using FACE.
+If possible, convert the png file to an xpm file."
+  (let* ((xpm (mode-icons--get-png-xpm-file icon-spec))
+         (xpm-name (mode-icons--get-png-xpm-file icon-spec t))
+         (xpm-p (file-readable-p xpm))
+         (png (mode-icons-get-icon-file (concat (nth 1 icon-spec) ".png")))
+         (png-p (file-readable-p png)))
+    (if xpm-p
+        (propertize (format "%s" mode) 'display
+                    (mode-icons-get-icon-display
+                     xpm-name 'xpm
+                     (or face
+                         (and (mode-icons--selected-window-active)
+                              'mode-line)
+                         'mode-line-inactive))
+                    'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm))
+      (if (not png-p)
+          (propertize (format "%s" mode)
+                      'mode-icons-p icon-spec)
+        (mode-icons--convert-png-to-xpm png xpm)
+        (propertize (format "%s" mode)
+                      'display
+                      (create-image png
+                                    ;; use imagemagick if available and supports PNG images
+                                    ;; (allows resizing images)
+                                    (when (and (fboundp 'imagemagick-types)
+                                               (memq 'png (imagemagick-types)))
+                                      'imagemagick)
+                                    nil
+                                    :ascent 'center
+                                    :heuristic-mask t
+                                    :face face)
+                      'mode-icons-p icon-spec)))))
 
 (defun mode-icons--get-emoji (mode icon-spec &optional face)
   "Get MODE emoji for ICON-SPEC using FACE."
@@ -792,6 +838,8 @@ FACE is the face to match when a xpm-bw image is used."
        (buffer-string)))
     ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'emoji))
      (mode-icons--get-emoji mode icon-spec face))
+    ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'png))
+     (mode-icons--get-png mode icon-spec face))
     (t (propertize (format "%s" mode) 'display
                    (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
                                                 (or face
