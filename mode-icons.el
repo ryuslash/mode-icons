@@ -151,7 +151,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Haml\\'" "haml" xpm)
     ("\\`Image[imagemagick]\\'" "svg" xpm)
     ("\\`Inf-Ruby\\'" "infruby" xpm)
-    ("\\`JavaScript\\'" "js" xpm)
+    ("\\`Java[Ss]cript\\'" "js" xpm)
     ("\\`Lisp\\'" "cl" xpm)
     ("\\`nXML\\'" "xml" xpm)
     ("\\`Org\\'" "org" xpm)
