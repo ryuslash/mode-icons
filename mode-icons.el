@@ -601,6 +601,7 @@ everywhere else."
                  (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))))
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
+   (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
    (or (image-type-available-p (nth 2 icon-spec))
        (and (eq (nth 2 icon-spec) 'png)
             (and (image-type-available-p 'xpm)
