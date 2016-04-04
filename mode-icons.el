@@ -622,16 +622,12 @@ When nil, don't stop the gimp inferior mode.")
 
 (defvar mode-icons--stop-gimp-timer nil)
 
-(defun mode-icons--pop-to-buffer-same-window (_buffer &optional _norecord)
-  "Ignore `pop-to-buffer-same-window' command."
-  t)
-
 (defun mode-icons--start-gimp-inferior ()
   "GIMP inferior process."
   (interactive)
   (when (file-exists-p mode-icons--gimp)
     (unless (get-buffer "*mode-icons-gimp*")
-      (letf (((symbol-function 'pop-to-buffer-same-window) #'mode-icons--pop-to-buffer-same-window))
+      (cl-letf (((symbol-function 'pop-to-buffer-same-window) (lambda(&rest _ignore))))
         (save-excursion
           (run-scheme  (format "\"%s\" %s" mode-icons--gimp mode-icons--gimp-inferior-args))))
       (with-current-buffer (get-buffer "*scheme*")
@@ -648,23 +644,8 @@ When nil, don't stop the gimp inferior mode.")
             (and (setq buf (get-buffer "*mode-icons-gimp*"))
                  (with-current-buffer buf
                    (goto-char (point-min))
-                   (ignore-errors (comint-send-string "\n"))
                    (when (re-search-forward "ts>" nil t)
                      (setq mode-icons--gimp-ready-p t))))))))
-
-(defun mode-icons--process-gimp (scm)
-  "Process gimp SCM (scheme)."
-  (when mode-icons--stop-gimp-timer
-    (cancel-timer mode-icons--stop-gimp-timer))
-  (when (file-exists-p mode-icons--gimp)
-    (if (mode-icons--gimp-ready-p)
-        (progn
-          (comint-send-string
-           (with-current-buffer (get-buffer "*mode-icons-gimp*"))
-           (concat scm "\n"))
-          (when mode-icons--stop-gimp-after
-            (setq mode-icons--stop-gimp-timer (run-with-timer mode-icons--stop-gimp-after nil #'mode-icons-stop-gimp-inferior))))
-      (run-with-idle-timer 1 nil #'mode-icons--process-gimp scm))))
 
 (defvar mode-icons--stop-gimp-inferior nil)
 (defun mode-icons--stop-gimp-inferior ()
@@ -682,6 +663,20 @@ When nil, don't stop the gimp inferior mode.")
      ((and buf (not (get-buffer-process buf)))
       (kill-buffer (get-buffer "*mode-icons-gimp*")))
      (t (run-with-idle-timer 1 nil #'mode-icons--stop-gimp-inferior))))))
+
+(defun mode-icons--process-gimp (scm)
+  "Process gimp SCM (scheme)."
+  (when mode-icons--stop-gimp-timer
+    (cancel-timer mode-icons--stop-gimp-timer))
+  (when (file-exists-p mode-icons--gimp)
+    (if (mode-icons--gimp-ready-p)
+        (progn
+          (comint-send-string
+           (with-current-buffer (get-buffer "*mode-icons-gimp*"))
+           (concat scm "\n"))
+          (when mode-icons--stop-gimp-after
+            (setq mode-icons--stop-gimp-timer (run-with-timer mode-icons--stop-gimp-after nil #'mode-icons--stop-gimp-inferior))))
+      (run-with-idle-timer 1 nil #'mode-icons--process-gimp scm))))
 
 (defvar mode-icons--font-to-xpm-gimp-script
   (replace-regexp-in-string
@@ -1174,10 +1169,14 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
   (unless dont-update
     (force-mode-line-update)))
 
-(defun mode-icons--generate-major-mode-item ()
-  "Give rich strings needed for `major-mode' viewing."
+(defun mode-icons--generate-major-mode-item (&optional face)
+  "Give rich strings needed for `major-mode' viewing.
+FACE is the face that the major mode item should be rendered in."
   (let ((active (mode-icons--selected-window-active)))
-    (eval `(propertize ,(mode-icons--recolor-string (or mode-icons--mode-name mode-name))
+    (eval `(propertize ,(mode-icons--recolor-string (or mode-icons--mode-name mode-name) active face)
+                       'face ',(or face
+                                   (and active 'mode-line)
+                                   'mode-line-inactive)
                        ,@mode-icons-major-mode-base-text-properties))))
 
 ;;; selected take from powerline
@@ -1423,7 +1422,10 @@ FACE is the face to render the icon in."
 
 (defun mode-icons--mode-line-eol-desc (&optional string face)
   "Modify `mode-line-eol-desc' to have icons.
-STRING is the string to modify, or if absent, the value from `mode-line-eol-desc'.
+
+STRING is the string to modify, or if absent, the value from
+`mode-line-eol-desc'.
+
 FACE is the face that will be used to render the segment."
   (let* ((str (or string (mode-line-eol-desc)))
          (props (text-properties-at 0 str))
@@ -1586,7 +1588,16 @@ PAD is the padding around the minor modes."
        (if mode-icons-mode
            (powerline-raw (format-mode-line (mode-icons--generate-minor-mode-list face) face) face pad)
          (mode-icons--real-powerline-minor-modes face pad)))
-     (fset 'powerline-minor-modes (symbol-function #'mode-icons--powerline-minor-modes))))
+     (declare-function mode-icons--real-powerline-major-mode "powerline")
+     (fset 'mode-icons--real-powerline-major-mode (symbol-function #'powerline-minor-modes))
+     (defun mode-icons--powerline-major-mode (&optional face pad)
+       "Powerline major modes is replaced by this function.
+FACE is the face to use.
+PAD is the padding around the minor modes."
+       (if mode-icons-mode
+           (powerline-raw (format-mode-line (mode-icons--generate-major-mode-item face) face) face pad)
+         (mode-icons--real-powerline-major-mode face pad)))
+     (fset 'powerline-major-mode (symbol-function #'mode-icons--powerline-major-mode))))
 
 (eval-after-load 'emojify
   '(progn
