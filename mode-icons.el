@@ -229,7 +229,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\` Ergo" #xf11c FontAwesome)
     ("\\` drag\\'" #xf047 FontAwesome)
     ("\\` Helm\\'" "helm" xpm-bw) ;; By Noe Araujo, MX, https://thenounproject.com/term/helm/233101/
-    ("\\`Messages\\'" #xf044 FontAwesome)
+    ("\\`Messages\\'" #xf27b FontAwesome)
     ("\\`Conf" #xf1de FontAwesome)
     ("\\`Fundamental\\'" #xf016 FontAwesome)
     ("\\`Javascript-IDE\\'" "js" xpm)
