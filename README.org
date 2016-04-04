@@ -86,14 +86,4 @@ and use the black and white image by setting:
 #+BEGIN_SRC emacs-lisp
 (setq mode-icons-grayscale-transform nil)
 #+END_SRC
-** Making some icons display better
-Some icons are derived from a font, and display better if you have the
-font installed. Without the font they look a bit jagged (For example
-the save icon, the spelling icon, etc)
-
-[[http://i.imgur.com/zFNvAoz.png?1]]
-
-Once the fonts are installed, the anti-aliasing makes the icons look better:
-
-[[http://i.imgur.com/JkBMSPF.png]]
 

@@ -52,7 +52,7 @@
 ;;
 ;;     (mode-icons-mode)
 ;;
-;; As of version 0.3.0 this project includes some icons which use icon
+;; As of version 0.3.0 this project includes some icons which can use icon
 ;; fonts instead of images.  These fonts are:
 ;;
 ;; - Font Awesome, found at URL `http://fontawesome.io/'.
@@ -60,9 +60,6 @@
 ;; - Font Mfizz, found at URL `http://fizzed.com/oss/font-mfizz'.
 ;; - IcoMoon, found at URL `https://icomoon.io/#icons-icomoon'.
 ;;
-;; You should have these installed if you want to use these icons,
-;; otherwise you may get strange glyphs in your mode-line instead of
-;; an icon.
 
 ;;; Code:
 
@@ -711,6 +708,7 @@ When nil, don't stop the gimp inferior mode.")
   (gimp-layer-add-alpha layer)
   (gimp-drawable-fill layer TRANSPARENT-FILL)
   (set! out-text (car (gimp-text-fontname image layer 0 0 text 0 TRUE font-size PIXELS font-name)))
+
   (set! out-width (car (gimp-drawable-width out-text)))
   (set! out-height (car (gimp-drawable-height out-text)))
   (set! out-buffer (* out-height (/ buffer-image 100)))
@@ -719,19 +717,72 @@ When nil, don't stop the gimp inferior mode.")
   (gimp-image-resize image out-width out-height 0 0)
   (gimp-layer-resize layer out-width out-height 0 0)
   (gimp-layer-set-offsets out-text out-buffer out-buffer)
+  (gimp-image-flatten image)
   (set! drawable (car (gimp-image-get-active-layer image)))
   (file-xpm-save RUN-NONINTERACTIVE image drawable xpm-image xpm-image 127)
   (gimp-image-delete image))")
   "Gimp scheme script to convert a font character to xpm file.")
 
+(defcustom mode-icons-generate-font-grayscale nil
+  "Generate grayscale images for font icons.
+This is used instead of transparancy to capure the font's
+anti-aliasing.  `mode-icons' will transform the colors to match
+the background instead."
+  :type 'boolean
+  :group 'mode-icons)
+
 (defvar mode-icons--convert-text-to-xpm (make-hash-table :test 'equal))
-(defun mode-icons--convert-text-to-xpm (text font xpm)
-  "Convert TEXT in FONT to XPM file using gimp."
+(defun mode-icons--convert-text-to-xpm (text font xpm &optional face height)
+  "Convert TEXT in FONT to XPM file using gimp.
+
+When FACE is non-nil, use the face background and foreground
+properties to render the font (its no longer transparent).
+
+When HEIGHT is non-nil, use the font HEIGHT (in pixels) instead
+of 20px."
   (when (and mode-icons--gimp (file-exists-p mode-icons--gimp)
              xpm (not (gethash xpm mode-icons--convert-text-to-xpm))
              (not (file-exists-p xpm)))
     (puthash xpm t mode-icons--convert-text-to-xpm)
-    (mode-icons--process-gimp (format mode-icons--font-to-xpm-gimp-script text font xpm))))
+    (let ((script (format mode-icons--font-to-xpm-gimp-script text font xpm))
+          (background (and face (color-name-to-rgb (face-background face))))
+          (foreground (and face (color-name-to-rgb (face-foreground face)))))
+      (when background
+        (setq background (mapcar (lambda(x)
+                                   (round (* 255 x))) background)
+              foreground (mapcar (lambda(x)
+                                   (round (* 255 x))) foreground))
+        (setq script (replace-regexp-in-string
+                      (regexp-quote "(bg-color '(255 255 255))")
+                      (format "(bg-color '%s)" background)
+                      script)
+              script (replace-regexp-in-string
+                      (regexp-quote "(fg-color '(0 0 0))")
+                      (format "(fg-color '%s)" foreground)
+                      script)
+              script (replace-regexp-in-string
+                      "TRANSPARENT-FILL" "BACKGROUND-FILL" script)
+              script (replace-regexp-in-string
+                      (regexp-quote "(gimp-layer-add-alpha layer)") "" script)))
+      (when height
+        (setq script (replace-regexp-in-string
+                      (regexp-quote "(image-height 20)")
+                      (format "(image-height %s)" background)
+                      script)
+              script (replace-regexp-in-string
+                      (regexp-quote "(font-size 20)")
+                      (format "(font-size %s)" background)
+                      script)
+              script (replace-regexp-in-string
+                      "TRANSPARENT-FILL" "BACKGROUND-FILL" script)
+              script (replace-regexp-in-string
+                      (regexp-quote "(gimp-layer-add-alpha layer)") "" script)))
+      (when mode-icons-generate-font-grayscale
+        (setq script (replace-regexp-in-string
+                      "TRANSPARENT-FILL" "BACKGROUND-FILL" script)
+              script (replace-regexp-in-string
+                      (regexp-quote "(gimp-layer-add-alpha layer)") "" script)))
+      (mode-icons--process-gimp script))))
 
 (defun mode-icons--get-font-xpm-file (icon-spec &optional icon-name)
   "Get the font icon equivalent xpm file name from ICON-SPEC.
@@ -1049,24 +1100,18 @@ FACE represents the face used when the icon is a xpm-bw image."
 (defvar mode-icons-cached-mode-name nil
   "Cached mode name to restore when disabling mode-icons.")
 
-(defvar mode-icons-mode-name-active nil
-  "Active icon for `mode-name'.")
-
-(defvar mode-icons-mode-name-inactive nil
-  "Inactive icon for `mode-name'.")
+(defvar mode-icons--mode-name nil
+  "Mode name displayed by mode-icons.")
 
 (defun mode-icons-set-mode-icon (mode)
   "Set the icon for MODE."
   (unless mode-icons-cached-mode-name
     (set (make-local-variable 'mode-icons-cached-mode-name)
          mode-name)
-    (let ((mode-icons-desaturate-inactive mode-icons-desaturate-active))
-      (set (make-local-variable 'mode-icons-mode-name-active)
-         (mode-icons-get-mode-icon mode 'mode-line)))
-    (let ((mode-icons-desaturate-active mode-icons-desaturate-inactive))
-      (set (make-local-variable 'mode-icons-mode-name-inactive)
-           (mode-icons-get-mode-icon mode 'mode-line-inactive)))
-    (setq mode-name (mode-icons-get-mode-icon mode))))
+    (set (make-local-variable 'mode-icons--mode-name)
+         (mode-icons-get-mode-icon mode))
+    (when mode-icons-change-mode-name
+      (setq mode-name mode-icons--mode-name))))
 
 (defun mode-icons-major-mode-icons-undo ()
   "Undo the `mode-name' icons."
@@ -1132,8 +1177,7 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
 (defun mode-icons--generate-major-mode-item ()
   "Give rich strings needed for `major-mode' viewing."
   (let ((active (mode-icons--selected-window-active)))
-    (eval `(propertize ,(or (and active mode-icons-mode-name-active)
-                            mode-icons-mode-name-inactive mode-name)
+    (eval `(propertize ,(mode-icons--recolor-string (or mode-icons--mode-name mode-name))
                        ,@mode-icons-major-mode-base-text-properties))))
 
 ;;; selected take from powerline
