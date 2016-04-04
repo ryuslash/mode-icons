@@ -146,7 +146,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Lisp Interaction\\'" "emacs" xpm)
     ("\\`HTML\\'" "html" xpm)
     ("\\`Haml\\'" "haml" xpm)
-    ("\\`Image[imagemagick]\\'" "svg" xpm)
+    ("\\`Image\\[imagemagick\\]\\'" "svg" xpm)
     ("\\`Inf-Ruby\\'" "infruby" xpm)
     ("\\`Java[Ss]cript\\'" "js" xpm)
     ("\\`Lisp\\'" "cl" xpm)
@@ -235,6 +235,8 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Javascript-IDE\\'" "js" xpm)
     ("\\` Undo-Tree\\'" ":palm_tree:" emoji)
     ("\\`LaTeX\\'" "tex" ext)
+    ("\\`Image\\[xpm\\]\\'" "xpm" ext)
+    ("\\`Image\\[png\\]\\'" "png" ext)
     ;; Diminished modes
     ("\\` \\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil))
   "Icons for major and minor modes.
