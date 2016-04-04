@@ -38,11 +38,11 @@ Some of the modes that have icons instead of names now:
   - [[http://fizzed.com/oss/font-mfizz][Font Mfizz]]
   - [[https://icomoon.io/#icons-icomoon][IcoMoon]]
 
-  You need to have installed these on your system in order to use
-  these fonts, mode-icons will not do this for you.
+  The icons look the best if you have the fonts installed on your
+  system and mode-icons will not do this for you.
 
 * Installation
-** manually
+** Manually
 
    Place ~mode-icons.el~ somewhere in your =load-path= and copy the
    ~icons/~ directory there as well. Then =require= ~mode-icons~ in your
@@ -86,3 +86,14 @@ and use the black and white image by setting:
 #+BEGIN_SRC emacs-lisp
 (setq mode-icons-grayscale-transform nil)
 #+END_SRC
+** Making some icons display better
+Some icons are derived from a font, and display better if you have the
+font installed. Without the font they look a bit jagged (For example
+the save icon, the spelling icon, etc)
+
+[[http://i.imgur.com/zFNvAoz.png?1]]
+
+Once the fonts are installed, the anti-aliasing makes the icons look better:
+
+[[http://i.imgur.com/JkBMSPF.png]]
+

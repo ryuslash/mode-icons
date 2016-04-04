@@ -43,6 +43,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Allow desaturating and matching the mode-line face colors for xpm
   images.
 - Allow emojis to be used as mode-icons
+- Allow font icons to be used without the font.
+- Add gimp inferior buffer to generate images for mode-icons,
+  preferring the xpm format.
 
 ### Removed
 
