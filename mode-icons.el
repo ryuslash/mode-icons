@@ -601,7 +601,10 @@ everywhere else."
                  (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))))
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
-   (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+   (or (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+       (and (image-type-available-p 'xpm)
+            (mode-icons--get-font-xpm-file icon-spec)
+            (file-exists-p (mode-icons--get-font-xpm-file icon-spec))))
    (or (image-type-available-p (nth 2 icon-spec))
        (and (eq (nth 2 icon-spec) 'png)
             (and (image-type-available-p 'xpm)
@@ -614,10 +617,11 @@ everywhere else."
 (defvar mode-icons--gimp (executable-find "gimp")
   "Gimp to convert png to xpm.")
 
-(defvar mode-icons--gimp-inferior-args "-i -d -f -b -")
+(defvar mode-icons--gimp-inferior-args "-i -d -b -")
 
-(defvar mode-icons--stop-gimp-after 120
-  "Seconds of idle time before mode-icons gimp is stopped.")
+(defvar mode-icons--stop-gimp-after nil
+  "Seconds of idle time before mode-icons gimp is stopped.
+When nil, don't stop the gimp inferior mode.")
 
 (defvar mode-icons--stop-gimp-timer nil)
 
@@ -647,6 +651,7 @@ everywhere else."
             (and (setq buf (get-buffer "*mode-icons-gimp*"))
                  (with-current-buffer buf
                    (goto-char (point-min))
+                   (ignore-errors (comint-send-string "\n"))
                    (when (re-search-forward "ts>" nil t)
                      (setq mode-icons--gimp-ready-p t))))))))
 
@@ -681,6 +686,88 @@ everywhere else."
       (kill-buffer (get-buffer "*mode-icons-gimp*")))
      (t (run-with-idle-timer 1 nil #'mode-icons--stop-gimp-inferior))))))
 
+(defvar mode-icons--font-to-xpm-gimp-script
+  (replace-regexp-in-string
+   "[ \n\t]+" " "
+   "(let* ((image-width 1024)
+       (image-height 20)
+       (buffer-image 1)
+       (text \"%s\")
+       (font-size 20)
+       (font-name \"%s\")
+       (xpm-image \"%s\")
+       (bg-color '(255 255 255))
+       (fg-color '(0 0 0))
+       (image (car (gimp-image-new 1024 16 0)))
+       (layer (car (gimp-layer-new image image-width image-height RGB-IMAGE \"layer 1\" 100 NORMAL)))
+       (out-text)
+       (out-width)
+       (out-height)
+       (out-buffer)
+       (drawable))
+  (gimp-image-add-layer image layer 0)
+  (gimp-context-set-background bg-color)
+  (gimp-context-set-foreground fg-color)
+  (gimp-layer-add-alpha layer)
+  (gimp-drawable-fill layer TRANSPARENT-FILL)
+  (set! out-text (car (gimp-text-fontname image layer 0 0 text 0 TRUE font-size PIXELS font-name)))
+  (set! out-width (car (gimp-drawable-width out-text)))
+  (set! out-height (car (gimp-drawable-height out-text)))
+  (set! out-buffer (* out-height (/ buffer-image 100)))
+  (set! out-height (+ out-height out-buffer out-buffer))
+  (set! out-width (+ out-width  out-buffer out-buffer))
+  (gimp-image-resize image out-width out-height 0 0)
+  (gimp-layer-resize layer out-width out-height 0 0)
+  (gimp-layer-set-offsets out-text out-buffer out-buffer)
+  (set! drawable (car (gimp-image-get-active-layer image)))
+  (file-xpm-save RUN-NONINTERACTIVE image drawable xpm-image xpm-image 127)
+  (gimp-image-delete image))")
+  "Gimp scheme script to convert a font character to xpm file.")
+
+(defvar mode-icons--convert-text-to-xpm (make-hash-table :test 'equal))
+(defun mode-icons--convert-text-to-xpm (text font xpm)
+  "Convert TEXT in FONT to XPM file using gimp."
+  (when (and mode-icons--gimp (file-exists-p mode-icons--gimp)
+             xpm (not (gethash xpm mode-icons--convert-text-to-xpm))
+             (not (file-exists-p xpm)))
+    (puthash xpm t mode-icons--convert-text-to-xpm)
+    (mode-icons--process-gimp (format mode-icons--font-to-xpm-gimp-script text font xpm))))
+
+(defun mode-icons--get-font-xpm-file (icon-spec &optional icon-name)
+  "Get the font icon equivalent xpm file name from ICON-SPEC.
+When ICON-NAME is non-nil, return the small icon name without the
+extension or directory."
+  (let* ((xpm-int (or (and (stringp (nth 1 icon-spec))
+                           (= 1 (length (nth 1 icon-spec)))
+                           (aref (nth 1 icon-spec) 0))
+                      (and (integerp (nth 1 icon-spec))
+                           (nth 1 icon-spec))))
+         (xpm-base (and (integerp xpm-int)
+                        (format "%s-%x" (nth 2 icon-spec)
+                                xpm-int))))
+    (and xpm-base
+         (if icon-name
+             xpm-base
+           (mode-icons-get-icon-file (concat xpm-base ".xpm"))))))
+
+(defun mode-icons--create-font-xpm-file (icon-spec)
+  "Create a font-based xpm file based on ICON-SPEC."
+  (mode-icons--convert-text-to-xpm
+   (or (and (stringp (nth 1 icon-spec))
+            (nth 1 icon-spec))
+       (and (integerp (nth 1 icon-spec))
+            (make-string 1 (nth 1 icon-spec))))
+   (symbol-name (nth 2 icon-spec))
+   (mode-icons--get-font-xpm-file icon-spec)))
+
+(defun mode-icons--convert-all-font-icons-to-xpm ()
+  "Convert all font icons to xpm files."
+  (interactive)
+  (setq mode-icons--convert-text-to-xpm (make-hash-table :test 'equal))
+  (dolist (icon-spec mode-icons)
+    (when (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+      (mode-icons--create-font-xpm-file icon-spec))))
+
 (defvar mode-icons--png-to-xpm-gimp-script
   (replace-regexp-in-string
    "[ \n\t]+" " "
@@ -694,19 +781,19 @@ everywhere else."
        (new-width (inexact->exact (round (* width (/ new-height height))))))
   (gimp-image-resize image 16 new-width 0 0)
   (set! drawable (car (gimp-image-get-active-layer image)))
-  (file-xpm-save RUN-NONINTERACTIVE image drawable xpm-image xpm-image 127))")
+  (file-xpm-save RUN-NONINTERACTIVE image drawable xpm-image xpm-image 127)
+  (gimp-image-delete image))")
   "Gimp scheme script to convert png to xpm.")
 
 (defvar mode-icons--convert-png-to-xpm (make-hash-table :test 'equal)
   "Hash table to make sure you only convert once.")
-
-(setq mode-icons--convert-png-to-xpm (make-hash-table :test 'equal))
 
 (defun mode-icons--convert-png-to-xpm (png xpm)
   "Covert PNG to a ?x16 XPM using `mode-icons--gimp'."
   (when (and mode-icons--gimp (file-exists-p mode-icons--gimp)
              xpm (not (gethash (list png xpm) mode-icons--convert-png-to-xpm))
              (not (file-exists-p xpm)))
+    (puthash (list png xpm) t mode-icons--convert-png-to-xpm)
     (mode-icons--process-gimp (format mode-icons--png-to-xpm-gimp-script png xpm))))
 
 (defun mode-icons--get-png-xpm-file (icon-spec &optional icon-name)
@@ -724,7 +811,7 @@ This only supports emoji enclosed in a \":\" like :herb:.
 When ICON-NAME is non-nil, return the mode-icons icon name.
 For :herb: it would be e-herb."
   (let* ((xpm-base (nth 1 icon-spec))
-         )
+         file)
     (when (char-equal (aref xpm-base 0) ?:)
       (setq file (substring xpm-base 1))
       (when (char-equal (aref (substring xpm-base -1) 0) ?:)
@@ -768,12 +855,27 @@ If possible, convert the png file to an xpm file."
                                     :face face)
                       'mode-icons-p icon-spec)))))
 
+(defcustom mode-icons-prefer-xpm-over-emoji nil
+  "Prefer generated xpms over fonts.
+If mode-icons has a generated font character, prefer that over
+the actual font."
+  :type 'boolean
+  :group 'mode-icons)
+
+(defcustom mode-icons-generate-emoji-xpms nil
+  "Generate font compatibility xpms for fonts."
+  :type 'boolean
+  :group 'mode-icons)
+
+
 (defun mode-icons--get-emoji (mode icon-spec &optional face)
   "Get MODE emoji for ICON-SPEC using FACE."
   (let* ((xpm (mode-icons--get-emoji-xpm-file icon-spec))
          (xpm-name (mode-icons--get-emoji-xpm-file icon-spec t))
          (xpm-p (file-readable-p xpm)))
-    (if xpm-p
+    (if (or (and mode-icons-prefer-xpm-over-emoji xpm-p)
+            (and xpm-p (not (featurep 'emojify)))
+            (and xpm-p (not (image-type-available-p 'png))))
         (propertize (format "%s" mode) 'display
                     (mode-icons-get-icon-display
                      xpm-name 'xpm
@@ -790,7 +892,8 @@ If possible, convert the png file to an xpm file."
         (if (not (file-exists-p image-file))
             (propertize (format "%s" mode)
                         'mode-icons-p icon-spec)
-          (mode-icons--convert-png-to-xpm image-file xpm)
+          (when mode-icons-generate-emoji-xpms
+            (mode-icons--convert-png-to-xpm image-file xpm))
           (propertize (format "%s" mode)
                       'display
                       (create-image image-file
@@ -807,6 +910,55 @@ If possible, convert the png file to an xpm file."
                                     ;; no-op if imagemagick is not available
                                     :height (emojify-default-font-height))
                       'mode-icons-p icon-spec))))))
+
+(defcustom mode-icons-prefer-xpm-over-font nil
+  "Prefer generated xpms over fonts.
+If mode-icons has a generated font character, prefer that over
+the actual font."
+  :type 'boolean
+  :group 'mode-icons)
+
+(defcustom mode-icons-generate-font-xpms nil
+  "Generate font compatibility xpms for fonts."
+  :type 'boolean
+  :group 'mode-icons)
+
+(defun mode-icons--get-font (mode icon-spec &optional face)
+  "Get font for MODE based on ICON-SPEC, and FACE."
+  ;; Use `compose-region' because it allows clicable text.
+  (let* ((xpm (mode-icons--get-font-xpm-file icon-spec))
+         (xpm-name (mode-icons--get-font-xpm-file icon-spec t))
+         (xpm-p (file-readable-p xpm)))
+    (when (and (not xpm-p) mode-icons-generate-font-xpms)
+      (mode-icons--create-font-xpm-file icon-spec))
+    (if (and xpm-p (or mode-icons-prefer-xpm-over-font
+                       (not (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec)))))
+        (propertize (format "%s" mode) 'display
+                    (mode-icons-get-icon-display
+                     xpm-name 'xpm
+                     (or face
+                         (and (mode-icons--selected-window-active)
+                              'mode-line)
+                         'mode-line-inactive))
+                    'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm-bw)
+                    'face face)
+      (with-temp-buffer
+        (if (stringp mode)
+            (insert mode)
+          (insert (or (and (integerp (nth 1 icon-spec))
+                           (make-string 1 (nth 1 icon-spec)))
+                      (nth 1 icon-spec))))
+        (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
+                                                         (make-string 1 (nth 1 icon-spec)))
+                                                    (nth 1 icon-spec)))
+        (put-text-property (point-min) (point-max)
+                           'face (or face
+                                     (and (mode-icons--selected-window-active)
+                                          'mode-line)
+                                     'mode-line-inactive))
+        (put-text-property (point-min) (point-max)
+                           'mode-icons-p icon-spec)
+        (buffer-string)))))
 
 (defun mode-icons-propertize-mode (mode icon-spec &optional face)
   "Propertize MODE with ICON-SPEC.
@@ -825,18 +977,7 @@ FACE is the face to match when a xpm-bw image is used."
                  'mode-icons-p icon-spec))
     ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
      ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
-     ;; Use `compose-region' because it allows clicable text.
-     (with-temp-buffer
-       (if (stringp mode)
-           (insert mode)
-         (insert (or (and (integerp (nth 1 icon-spec))
-                          (make-string 1 (nth 1 icon-spec)))
-                     (nth 1 icon-spec))))
-       (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
-                                                        (make-string 1 (nth 1 icon-spec)))
-                                                   (nth 1 icon-spec)))
-       (put-text-property (point-min) (point-max) 'mode-icons-p icon-spec)
-       (buffer-string)))
+     (mode-icons--get-font mode icon-spec face))
     ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'emoji))
      (mode-icons--get-emoji mode icon-spec face))
     ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'png))
@@ -1069,6 +1210,9 @@ Use FACE when specified."
                                  (or face
                                      (and active 'mode-line)
                                      'mode-line-inactive))
+                  'face (or face
+                            (and active 'mode-line)
+                            'mode-line-inactive)
                   'mode-icons-p icon-spec))
      ((and icon-spec (memq (nth 2 icon-spec) '(emoji))
            (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))
@@ -1078,25 +1222,35 @@ Use FACE when specified."
                                  (or face
                                      (and active 'mode-line)
                                      'mode-line-inactive))
+                  'face (or face
+                            (and active 'mode-line)
+                            'mode-line-inactive)
                   'mode-icons-p icon-spec))
-     (t mode))))
+     (t (propertize mode
+                    'face (or face
+                              (and active 'mode-line)
+                              'mode-line-inactive))))))
 
 (defun mode-icons--generate-minor-mode-list (&optional face)
   "Extracts all rich strings necessary for the minor mode list.
-When FACE is non-nil, use FACE to render the `minor-mode-alist.'"
+When FACE is non-nil, use FACE to render the `minor-mode-alist'."
   (let ((active (mode-icons--selected-window-active)))
     (delete " " (delete "" (mapcar (lambda(mode)
                                      (concat " " (eval `(propertize ,(mode-icons--recolor-minor-mode-image mode active face)
                                                                     ,@mode-icons-minor-mode-base-text-properties))))
                                    (split-string (format-mode-line minor-mode-alist)))))))
 
-(defun mode-icons--generate-narrow ()
-  "Extracts all rich strings necessary for narrow indicator."
-  (let (icon-spec)
+(defun mode-icons--generate-narrow (&optional face)
+  "Extracts all rich strings necessary for narrow indicator.
+When FACE is non-nil, use FACE to render the narrow indicator."
+  (let ((active (mode-icons--selected-window-active))
+        icon-spec)
     (delete " " (delete "" (mapcar (lambda(mode)
                                      (concat " " (eval `(propertize
-                                                         ,(if (setq icon-spec (mode-icons-get-icon-spec mode))
-                                                              (mode-icons-propertize-mode mode icon-spec)
+                                                         ,(if (setq icon-spec (mode-icons-get-icon-spec (concat " " mode)))
+                                                              (mode-icons--recolor-minor-mode-image
+                                                               (mode-icons-propertize-mode (concat " " mode) icon-spec)
+                                                               active face)
                                                             mode)
                                                          ,@mode-icons-narrow-text-properties))))
                                    (split-string (format-mode-line "%n")))))))
@@ -1107,69 +1261,75 @@ When FACE is non-nil, use FACE to render the `minor-mode-alist.'"
   :type 'boolean
   :group 'mode-icons)
 
-(defun mode-icons--read-only-status ()
-  "Get Read Only Status icon."
-  (eval `(propertize
-          ,(let ((ro (format-mode-line "%1*"))
-                 icon-spec)
-             (setq ro (or (cond
-                           ((string= "%" ro)
-                            (if (setq icon-spec (mode-icons-get-icon-spec 'read-only))
-                                (mode-icons-propertize-mode 'read-only icon-spec)
-                              ro))
-                           (t
-                            (if (setq icon-spec (mode-icons-get-icon-spec 'writable))
-                                (mode-icons-propertize-mode 'writable icon-spec)
-                              ro)))
-                          ""))
-             (when (and mode-icons-read-only-space
-                        (not (string= ro "")))
-               (setq ro (concat ro " ")))
-             ro)
-          ,@mode-icons-read-only-text-properties)))
+(defun mode-icons--read-only-status (&optional face)
+  "Get Read Only Status icon.
+FACE is the face to render the icon in."
+  (let ((active (mode-icons--selected-window-active)))
+    (eval `(propertize
+            ,(let ((ro (format-mode-line "%1*"))
+                    icon-spec)
+                (setq ro (or (cond
+                              ((string= "%" ro)
+                               (if (setq icon-spec (mode-icons-get-icon-spec 'read-only))
+                                   (mode-icons-propertize-mode 'read-only icon-spec)
+                                 ro))
+                              (t
+                               (if (setq icon-spec (mode-icons-get-icon-spec 'writable))
+                                   (mode-icons-propertize-mode 'writable icon-spec)
+                                 ro)))
+                             "")
+                      ro (mode-icons--recolor-minor-mode-image ro active face))
+                (when (and mode-icons-read-only-space
+                           (not (string= ro "")))
+                  (setq ro (concat ro " ")))
+                ro) 
+            ,@mode-icons-read-only-text-properties))))
 
 (defcustom mode-icons-modified-status-space t
   "Add Space to modified status."
   :type 'boolean
   :group 'mode-icons)
 
-(defun mode-icons--modified-status ()
-  "Get modified status icon."
-  (eval `(propertize
-          ,(or (ignore-errors
-                 (let* ((bfn (buffer-file-name))
-                        (nice-file-p (and  (file-remote-p bfn)))
-                        (mod (or (and (not (or nice-file-p (verify-visited-file-modtime (current-buffer))))
-                                      "!")
-                                 (and (not (or nice-file-p (member (file-locked-p bfn) '(nil t))))
-                                      "s")
-                                 (format-mode-line "%1+")))
-                        icon-spec)
-                   (setq mod (or (cond
-                                  ((not (stringp mod)) "")
-                                  ((char-equal ?s (aref mod 0))
-                                   (if (setq icon-spec (mode-icons-get-icon-spec 'steal))
-                                       (mode-icons-propertize-mode 'steal icon-spec)
-                                     mod))
-                                  ((char-equal ?! (aref mod 0))
-                                   (if (setq icon-spec (mode-icons-get-icon-spec 'modified-outside))
-                                       (mode-icons-propertize-mode 'modified-outside icon-spec)
-                                     mod))
-                                  ((char-equal ?* (aref mod 0))
-                                   (if (setq icon-spec (mode-icons-get-icon-spec 'save))
-                                       (mode-icons-propertize-mode 'save icon-spec)
-                                     mod))
-                                  (t
-                                   (if (setq icon-spec (mode-icons-get-icon-spec 'saved))
-                                       (mode-icons-propertize-mode 'saved icon-spec)
-                                     mod)))
-                                 ""))
-                   (when (and mode-icons-modified-status-space
-                              (stringp mod)
-                              (not (string= mod "")))
-                     (setq mod (concat mod " ")))
-                   mod)) "")
-          ,@mode-icons-modified-text-properties)))
+(defun mode-icons--modified-status (&optional face)
+  "Get modified status icon.
+FACE is the face to render the icon in."
+  (let ((active (mode-icons--selected-window-active)))
+    (eval `(propertize
+            ,(or (ignore-errors
+                    (let* ((bfn (buffer-file-name))
+                           (nice-file-p (and  (file-remote-p bfn)))
+                           (mod (or (and (not (or nice-file-p (verify-visited-file-modtime (current-buffer))))
+                                         "!")
+                                    (and (not (or nice-file-p (member (file-locked-p bfn) '(nil t))))
+                                         "s")
+                                    (format-mode-line "%1+")))
+                           icon-spec)
+                      (setq mod (or (cond
+                                     ((not (stringp mod)) "")
+                                     ((char-equal ?s (aref mod 0))
+                                      (if (setq icon-spec (mode-icons-get-icon-spec 'steal))
+                                          (mode-icons-propertize-mode 'steal icon-spec)
+                                        mod))
+                                     ((char-equal ?! (aref mod 0))
+                                      (if (setq icon-spec (mode-icons-get-icon-spec 'modified-outside))
+                                          (mode-icons-propertize-mode 'modified-outside icon-spec)
+                                        mod))
+                                     ((char-equal ?* (aref mod 0))
+                                      (if (setq icon-spec (mode-icons-get-icon-spec 'save))
+                                          (mode-icons-propertize-mode 'save icon-spec)
+                                        mod))
+                                     (t
+                                      (if (setq icon-spec (mode-icons-get-icon-spec 'saved))
+                                          (mode-icons-propertize-mode 'saved icon-spec)
+                                        mod)))
+                                    ""))
+                      (setq mod (mode-icons--recolor-minor-mode-image mod active face))
+                      (when (and mode-icons-modified-status-space
+                                 (stringp mod)
+                                 (not (string= mod "")))
+                        (setq mod (concat mod " ")))
+                      mod)) "")
+            ,@mode-icons-modified-text-properties))))
 
 ;; Based on rich-minority by Artur Malabarba
 (defvar mode-icons--backup-construct nil)
@@ -1217,12 +1377,14 @@ When FACE is non-nil, use FACE to render the `minor-mode-alist.'"
   :type 'boolean
   :group 'mode-icons)
 
-(defun mode-icons--mode-line-eol-desc (&optional string)
+(defun mode-icons--mode-line-eol-desc (&optional string face)
   "Modify `mode-line-eol-desc' to have icons.
-STRING is the string to modify, or if absent, the value from `mode-line-eol-desc'."
+STRING is the string to modify, or if absent, the value from `mode-line-eol-desc'.
+FACE is the face that will be used to render the segment."
   (let* ((str (or string (mode-line-eol-desc)))
          (props (text-properties-at 0 str))
          (lt2 "")
+         (active (mode-icons--selected-window-active))
          icon-spec)
     (setq str (or (cond
                    ((string= "(Unix)" str)
@@ -1248,6 +1410,7 @@ STRING is the string to modify, or if absent, the value from `mode-line-eol-desc
                       str))
                    (t str))
                   ""))
+    (setq str (mode-icons--recolor-minor-mode-image str active face))
     (when mode-icons-eol-text
       (setq str (concat str lt2)))
     (when (and mode-icons-eol-space
