@@ -191,7 +191,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\` Rbow\\'" "rainbow" xpm)
     ("\\` ICY\\'" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.html
     ("\\` Golden\\'" "golden" xpm-bw) ;; Icon created by Arthur Shlain from Noun Project
-    ("\\`BibTeX\\'\\'" "bibtex" xpm)
+    ("\\`BibTeX\\'\\'" "bibtex" xpm-bw)
     ("\\`C[+][+]\\(/.*\\|\\)\\'" #xf10c font-mfizz)
     ("\\`C[#]\\(/.*\\|\\)\\'" #xf10d font-mfizz)
     ("\\`Elixir\\'" #xf115 font-mfizz)
@@ -234,6 +234,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Fundamental\\'" #xf016 FontAwesome)
     ("\\`Javascript-IDE\\'" "js" xpm)
     ("\\` Undo-Tree\\'" ":palm_tree:" emoji)
+    ("\\`LaTeX\\'" "tex" ext)
     ;; Diminished modes
     ("\\` \\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil))
   "Icons for major and minor modes.
@@ -271,7 +272,8 @@ without the extension.  And the third being the type of icon."
                  (const :tag "xbm" xbm)
                  (const :tag "xpm" xpm)
                  (const :tag "Black and White xpm that changes color to match the mode-line face" xpm-bw)
-                 (const :tag "Emoji" emoji))))
+                 (const :tag "Emoji" emoji)
+                 (const :tag "Mode Icons Generated file-type" ext))))
   :group 'mode-icons)
 
 (defvar mode-icons-get-xpm-string (make-hash-table :test 'equal))
@@ -598,6 +600,8 @@ everywhere else."
                  (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))))
    (and (eq (nth 2 icon-spec) 'jpg) (image-type-available-p 'jpeg))
    (and (eq (nth 2 icon-spec) 'xpm-bw) (image-type-available-p 'xpm))
+   (and (eq (nth 2 icon-spec) 'ext) (image-type-available-p 'xpm)
+        (mode-icons--ext-available-p icon-spec))
    (or (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
        (and (image-type-available-p 'xpm)
             (mode-icons--get-font-xpm-file icon-spec)
@@ -678,6 +682,53 @@ When nil, don't stop the gimp inferior mode.")
             (setq mode-icons--stop-gimp-timer (run-with-timer mode-icons--stop-gimp-after nil #'mode-icons--stop-gimp-inferior))))
       (run-with-idle-timer 1 nil #'mode-icons--process-gimp scm))))
 
+(defvar mode-icons--generic-type-to-xpm-gimp-script
+  (replace-regexp-in-string
+   "[ \n\t]+" " "
+   "(let* ((image-width 1024)
+       (image-height 20)
+       (buffer-image 1)
+       (text \"%s\")
+       (font-size 20)
+       (font-name \"FontAwesome\")
+       (xpm-image \"%s\")
+       (font-size-2 10)
+       (text-2 \"%s\")
+       (font-name-2 \"Haettenschweiler\")
+       (bg-color '(255 255 255))
+       (fg-color '(0 0 0))
+       (image (car (gimp-image-new 1024 16 0)))
+       (layer (car (gimp-layer-new image image-width image-height RGB-IMAGE \"layer 1\" 100 NORMAL)))
+       (layer2 (car (gimp-layer-new image image-width image-height RGB-IMAGE \"layer 2\" 100 NORMAL)))
+       (out-text)
+       (out-width)
+       (out-height)
+       (out-buffer)
+       (drawable))
+  (gimp-image-add-layer image layer 0)
+  (gimp-context-set-background bg-color)
+  (gimp-context-set-foreground fg-color)
+  (gimp-layer-add-alpha layer)
+  (gimp-drawable-fill layer TRANSPARENT-FILL)
+  (gimp-image-add-layer image layer2 0)
+  (gimp-layer-add-alpha layer2)
+  (gimp-drawable-fill layer2 TRANSPARENT-FILL)
+  (gimp-text-fontname image layer2 3 7 text-2 0 TRUE font-size-2 PIXELS font-name-2)
+  (set! out-text (car (gimp-text-fontname image layer 0 0 text 0 TRUE font-size PIXELS font-name)))
+  (set! out-width (car (gimp-drawable-width out-text)))
+  (set! out-height (car (gimp-drawable-height out-text)))
+  (set! out-buffer (* out-height (/ buffer-image 100)))
+  (set! out-height (+ out-height out-buffer out-buffer))
+  (set! out-width (+ out-width  out-buffer out-buffer))
+  (gimp-image-resize image out-width out-height 0 0)
+  (gimp-layer-resize layer out-width out-height 0 0)
+  (gimp-layer-set-offsets out-text out-buffer out-buffer)
+  (gimp-image-flatten image)
+  (set! drawable (car (gimp-image-get-active-layer image)))
+  (file-xpm-save RUN-NONINTERACTIVE image drawable xpm-image xpm-image 127)
+  (gimp-image-delete image))")
+  "Generic Type script.")
+
 (defvar mode-icons--font-to-xpm-gimp-script
   (replace-regexp-in-string
    "[ \n\t]+" " "
@@ -717,6 +768,28 @@ When nil, don't stop the gimp inferior mode.")
   (file-xpm-save RUN-NONINTERACTIVE image drawable xpm-image xpm-image 127)
   (gimp-image-delete image))")
   "Gimp scheme script to convert a font character to xpm file.")
+
+(defvar mode-icons--convert-ext-to-xpm (make-hash-table :test 'equal))
+(defun mode-icons--convert-ext-to-xpm (ext)
+  "Convert EXT to a xpm file."
+  (let ((xpm (mode-icons-get-icon-file (concat "ext-" (downcase ext) ".xpm"))))
+    (when (and mode-icons--gimp (file-exists-p mode-icons--gimp)
+               xpm (not (gethash xpm mode-icons--convert-ext-to-xpm))
+               (not (file-exists-p xpm)))
+      (puthash xpm t mode-icons--convert-ext-to-xpm)
+      (mode-icons--process-gimp
+       (format mode-icons--generic-type-to-xpm-gimp-script (make-string 1 #xf016) xpm
+               (downcase ext))))))
+
+(defun mode-icons--ext-available-p (icon-spec)
+  "Determine if ICON-SPEC's ext is availble for display.
+If not, try `mode-icons--convert-ext-to-xpm'."
+  (when (eq (nth 2 icon-spec) 'ext)
+    (let ((xpm (mode-icons-get-icon-file (concat "ext-" (downcase (nth 1 icon-spec)) ".xpm"))))
+      (if (file-exists-p xpm)
+          t
+        (mode-icons--convert-ext-to-xpm (nth 1 icon-spec))
+        nil))))
 
 (defcustom mode-icons-generate-font-grayscale nil
   "Generate grayscale images for font icons.
@@ -1028,6 +1101,17 @@ FACE is the face to match when a xpm-bw image is used."
      (mode-icons--get-emoji mode icon-spec face))
     ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'png))
      (mode-icons--get-png mode icon-spec face))
+    ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'ext))
+     (propertize (format "%s" mode) 'display
+                 (mode-icons-get-icon-display
+                  (concat "ext-" (nth 1 icon-spec)) 'xpm-bw
+                  (or face
+                      (and (mode-icons--selected-window-active)
+                           'mode-line)
+                      'mode-line-inactive))
+                 'mode-icons-p (list (nth 0 icon-spec)
+                                     (concat "ext-" (nth 1 icon-spec))
+                                     'xpm-bw)))
     (t (propertize (format "%s" mode) 'display
                    (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
                                                 (or face
