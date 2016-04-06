@@ -462,16 +462,15 @@ specified by type 'xpm-bw."
                                      :face face :icon icon))
                       (t
                        `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center :face ',face :icon ,icon)))))
-                  ((eq type 'emoji)
-                   (setq tmp (mode-icons--get-emoji " " (list "" icon type) face))
+                  ((and (eq type 'emoji) (setq tmp (mode-icons--get-emoji " " (list "" icon type) face)))
                    (get-text-property 0 'display tmp))
-                  ((eq type 'ext) ;; Shouldn't get here...
-                   (setq tmp (mode-icons--ext-available-p (list "" icon type)))
-                   (when tmp
-                     (mode-icons-get-icon-display (concat "ext-" (downcase icon)) 'xpm-bw face)))
+                  ;; Shouldn't get here...
+                  ((and (eq type 'ext) (setq tmp (mode-icons--ext-available-p (list "" icon type))))
+                   (mode-icons-get-icon-display (concat "ext-" (downcase icon)) 'xpm-bw face))
                   ((and (image-type-available-p 'xpm)
                         (setq tmp (mode-icons--get-font-xpm-file (list "" icon type)))
                         (file-exists-p tmp))
+                   (setq tmp )
                    (mode-icons-get-icon-display (mode-icons--get-font-xpm-file (list "" icon type) t) 'xpm-bw face))
                   (t nil))
                  mode-icons-get-icon-display))))
@@ -1668,19 +1667,19 @@ When ENABLE is non-nil, enable the changes to the mode line."
   (setq mode-icons-get-icon-spec (make-hash-table :test 'equal)
         mode-icons-get-icon-display (make-hash-table :test 'equal)))
 
-(defun mode-icons-reset-now ()
-  "Reset mode-icons icons."
-  (interactive)
-  (when (and mode-icons-mode (not (minibufferp)))
-    (mode-icons-set-current-mode-icon)
-    (mode-icons-set-minor-mode-icon)))
-
 (defun mode-icons-reset ()
   "Reset mode-icons icons."
   (interactive)
-  (mode-icons-reset-now)
-  ;; Run twice, in case the mode turns on some minor-modes
-  (run-with-idle-timer 0.1 nil #'mode-icons-reset-now))
+  (when (and mode-icons-mode (not (minibufferp)))
+    ;; Reset the major mode now.
+    (mode-icons-set-current-mode-icon)
+    ;; Reset the minor mode later, in case the mode turns on some
+    ;; minor-modes.
+    (run-with-idle-timer
+     0.1 nil `(lambda()
+                ;; Reset the minor mode icons
+                (with-current-buffer ,(current-buffer)
+                  (mode-icons-set-minor-mode-icon))))))
 
 
 ;; (defadvice powerline-minor-modes (around mode-icons-advice (&optional face pad) activate)
