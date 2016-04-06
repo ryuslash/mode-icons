@@ -1678,6 +1678,8 @@ When ENABLE is non-nil, enable the changes to the mode line."
 (defun mode-icons-reset ()
   "Reset mode-icons icons."
   (interactive)
+  (mode-icons-reset-now)
+  ;; Run twice, in case the mode turns on some minor-modes
   (run-with-idle-timer 0.1 nil #'mode-icons-reset-now))
 
 
