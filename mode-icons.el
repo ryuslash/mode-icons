@@ -1354,7 +1354,9 @@ FACE is the face to recolor the icon to."
 (defun mode-icons--recolor-minor-mode-image (mode active &optional face)
   "Recolor MODE image based on if the window is ACTIVE.
 Use FACE when specified."
-  (let ((icon-spec (get-text-property 0 'mode-icons-p mode)))
+  (let ((icon-spec (get-text-property 0 'mode-icons-p mode))
+        (display)
+        (face (or face)))
     (cond
      ((and icon-spec (memq (nth 2 icon-spec) '(xpm xpm-bw)))
       (propertize mode 'display (mode-icons-get-icon-display
@@ -1678,37 +1680,40 @@ When ENABLE is non-nil, enable the changes to the mode line."
     (run-with-idle-timer
      0.1 nil `(lambda()
                 ;; Reset the minor mode icons
-                (with-current-buffer ,(current-buffer)
-                  (mode-icons-set-minor-mode-icon))))))
-
-
-;; (defadvice powerline-minor-modes (around mode-icons-advice (&optional face pad) activate)
-;;   "Enable icon color changes in `powerline-minor-modes'."
-;;   (mode-icons--recolor-string (progn ad-do-it) nil face))
+                (when (buffer-live-p ,(current-buffer))
+                  (with-current-buffer ,(current-buffer)
+                    (mode-icons-set-minor-mode-icon)))))))
 
 (add-hook 'emacs-startup-hook #'mode-icons-reset)
 
 (eval-after-load 'powerline
   '(progn
      (declare-function mode-icons--real-powerline-minor-modes "powerline")
-     (fset 'mode-icons--real-powerline-minor-modes (symbol-function #'powerline-minor-modes))
+     (fset 'mode-icons--real-powerline-minor-modes #'powerline-minor-modes)
      (defun mode-icons--powerline-minor-modes (&optional face pad)
        "Powerline minor modes is replaced by this function.
 FACE is the face to use.
-PAD is the padding around the minor modes."
+PAD is the padding around the minor modes.
+
+The original is called if `mode-icons-mode' is disabled.  It is
+saved in `mode-icons--real-powerline-minor-modes'."
        (if mode-icons-mode
            (powerline-raw (format-mode-line (mode-icons--generate-minor-mode-list face) face) face pad)
          (mode-icons--real-powerline-minor-modes face pad)))
      (declare-function mode-icons--real-powerline-major-mode "powerline")
-     (fset 'mode-icons--real-powerline-major-mode (symbol-function #'powerline-minor-modes))
+     (fset 'mode-icons--real-powerline-major-mode #'powerline-minor-modes)
      (defun mode-icons--powerline-major-mode (&optional face pad)
        "Powerline major modes is replaced by this function.
 FACE is the face to use.
-PAD is the padding around the minor modes."
+PAD is the padding around the minor modes.
+
+The original is called if `mode-icons-mode' is disabled.  It is
+saved in `mode-icons--real-powerline-major-mode'."
        (if mode-icons-mode
            (powerline-raw (format-mode-line (mode-icons--generate-major-mode-item face) face) face pad)
          (mode-icons--real-powerline-major-mode face pad)))
-     (fset 'powerline-major-mode (symbol-function #'mode-icons--powerline-major-mode))))
+     (fset 'powerline-major-mode #'mode-icons--powerline-major-mode)))
+
 
 (eval-after-load 'emojify
   '(progn
