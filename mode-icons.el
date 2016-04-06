@@ -436,27 +436,44 @@ specified by type 'xpm-bw."
          (face (or face (and active 'mode-line) 'mode-line-inactive))
          (key (list icon type face active
                     mode-icons-desaturate-inactive mode-icons-desaturate-active
-                    mode-icons-grayscale-transform custom-enabled-themes)))
+                    mode-icons-grayscale-transform custom-enabled-themes))
+         tmp)
     (or (gethash key mode-icons-get-icon-display)
         (puthash key
-                 (let ((icon-path (mode-icons-get-icon-file
-                                   (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
-                                                        (symbol-name type))))))
-                   (cond
-                    ((and mode-icons-grayscale-transform (eq type 'xpm-bw))
+                 (cond
+                  ((memq type '(png xpm xpm-bw gif jpeg jpg xbm xpm))
+                   (let ((icon-path (mode-icons-get-icon-file
+                                     (concat icon "." (or (and (eq type 'xpm-bw) "xpm")
+                                                          (symbol-name type))))))
+                     (cond
+                      ((and mode-icons-grayscale-transform (eq type 'xpm-bw))
                        (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
                                      'xpm t :ascent 'center
-                                     :face face))
-                    ((eq type 'xpm-bw)
-                     `(image :type xpm :file ,icon-path :ascent center :face ',face))
-                    ((and (eq type 'xpm)
-                          (or (and active mode-icons-desaturate-active)
-                              (and (not active) mode-icons-desaturate-inactive)))
-                     (create-image (mode-icons-desaturate-xpm icon-path face)
+                                     :face face
+                                     :xpm-bw t
+                                     :icon icon))
+                      ((eq type 'xpm-bw)
+                       `(image :type xpm :file ,icon-path :ascent center :face ',face :icon ,icon))
+                      ((and (eq type 'xpm)
+                            (or (and active mode-icons-desaturate-active)
+                                (and (not active) mode-icons-desaturate-inactive)))
+                       (create-image (mode-icons-desaturate-xpm icon-path face)
                                      'xpm t :ascent 'center
-                                     :face face))
-                    (t
-                     `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center :face ',face))))
+                                     :face face :icon icon))
+                      (t
+                       `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center :face ',face :icon ,icon)))))
+                  ((eq type 'emoji)
+                   (setq tmp (mode-icons--get-emoji " " (list "" icon type) face))
+                   (get-text-property 0 'display tmp))
+                  ((eq type 'ext) ;; Shouldn't get here...
+                   (setq tmp (mode-icons--ext-available-p (list "" icon type)))
+                   (when tmp
+                     (mode-icons-get-icon-display (concat "ext-" (downcase icon)) 'xpm-bw face)))
+                  ((and (image-type-available-p 'xpm)
+                        (setq tmp (mode-icons--get-font-xpm-file (list "" icon type)))
+                        (file-exists-p tmp))
+                   (mode-icons-get-icon-display (mode-icons--get-font-xpm-file (list "" icon type) t) 'xpm-bw face))
+                  (t nil))
                  mode-icons-get-icon-display))))
 
 (defcustom mode-icons-minor-mode-base-text-properties
@@ -788,8 +805,8 @@ When nil, don't stop the gimp inferior mode.")
 If not, try `mode-icons--convert-ext-to-xpm'."
   (when (eq (nth 2 icon-spec) 'ext)
     (let ((xpm (mode-icons-get-icon-file (concat "ext-" (downcase (nth 1 icon-spec)) ".xpm"))))
-      (if (file-exists-p xpm)
-          t
+      (if (file-readable-p xpm)
+          xpm
         (mode-icons--convert-ext-to-xpm (nth 1 icon-spec))
         nil))))
 
@@ -988,7 +1005,6 @@ the actual font."
   :type 'boolean
   :group 'mode-icons)
 
-
 (defun mode-icons--get-emoji (mode icon-spec &optional face)
   "Get MODE emoji for ICON-SPEC using FACE."
   (let* ((xpm (mode-icons--get-emoji-xpm-file icon-spec))
@@ -1087,7 +1103,7 @@ the actual font."
 MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'.
 FACE is the face to match when a xpm-bw image is used."
-  (let (tmp)
+  (let (tmp new-icon-spec)
     (mode-icons-save-buffer-state ;; Otherwise may cause issues with trasient mark mode
      (cond
       ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
@@ -1097,15 +1113,10 @@ FACE is the face to match when a xpm-bw image is used."
       ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
        (propertize (nth 1 icon-spec) 'display (nth 1 icon-spec)
                    'mode-icons-p icon-spec))
-      ((or (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
-           (and (image-type-available-p 'xpm)
-                (mode-icons--get-font-xpm-file icon-spec)
-                (file-exists-p (mode-icons--get-font-xpm-file icon-spec))))
+      ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+       ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
        (mode-icons--get-font mode icon-spec face))
-      ((and (eq (nth 2 icon-spec) 'emoji)
-            (or (and (image-type-available-p 'png) (featurep 'emojify))
-                (and (image-type-available-p 'xpm)
-                     (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))))
+      ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'emoji))
        (mode-icons--get-emoji mode icon-spec face))
       ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'png))
        (mode-icons--get-png mode icon-spec face))
@@ -1120,13 +1131,20 @@ FACE is the face to match when a xpm-bw image is used."
                    'mode-icons-p (list (nth 0 icon-spec)
                                        (concat "ext-" (nth 1 icon-spec))
                                        'xpm-bw)))
-      (t (propertize (format "%s" mode) 'display
-                     (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
-                                                  (or face
-                                                      (and (mode-icons--selected-window-active)
-                                                           'mode-line)
-                                                      'mode-line-inactive))
-                     'mode-icons-p icon-spec))))))
+      (t (setq tmp (mode-icons-get-icon-display
+                    (nth 1 icon-spec) (nth 2 icon-spec)
+                    (or face
+                        (and (mode-icons--selected-window-active)
+                             'mode-line)
+                        'mode-line-inactive)))
+         (cond
+          ((and (plist-get tmp :xpm-bw) (plist-get tmp :icon))
+           (setq new-icon-spec (list (nth 0 icon-spec) (plist-get tmp :icon) 'xpm-bw)))
+          ((and (eq (plist-get tmp :type) 'xpm) (plist-get tmp :icon))
+           (setq new-icon-spec (list (nth 0 icon-spec) (plist-get tmp :icon) 'xpm)))
+          (t (setq new-icon-spec icon-spec)))
+         (propertize (format "%s" mode) 'display tmp
+                     'mode-icons-p new-icon-spec))))))
 
 (defvar mode-icons-get-icon-spec (make-hash-table :test 'equal)
   "Hash table of icon-specifications.")
