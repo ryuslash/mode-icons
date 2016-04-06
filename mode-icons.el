@@ -1087,40 +1087,46 @@ the actual font."
 MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'.
 FACE is the face to match when a xpm-bw image is used."
-  (mode-icons-save-buffer-state ;; Otherwise may cause issues with trasient mark mode
-   (cond
-    ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
-     mode)
-    ((not (nth 1 icon-spec))
-     "")
-    ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
-     (propertize (nth 1 icon-spec) 'display (nth 1 icon-spec)
-                 'mode-icons-p icon-spec))
-    ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
-     ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
-     (mode-icons--get-font mode icon-spec face))
-    ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'emoji))
-     (mode-icons--get-emoji mode icon-spec face))
-    ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'png))
-     (mode-icons--get-png mode icon-spec face))
-    ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'ext))
-     (propertize (format "%s" mode) 'display
-                 (mode-icons-get-icon-display
-                  (concat "ext-" (nth 1 icon-spec)) 'xpm-bw
-                  (or face
-                      (and (mode-icons--selected-window-active)
-                           'mode-line)
-                      'mode-line-inactive))
-                 'mode-icons-p (list (nth 0 icon-spec)
-                                     (concat "ext-" (nth 1 icon-spec))
-                                     'xpm-bw)))
-    (t (propertize (format "%s" mode) 'display
-                   (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
-                                                (or face
-                                                    (and (mode-icons--selected-window-active)
-                                                         'mode-line)
-                                                    'mode-line-inactive))
-                   'mode-icons-p icon-spec)))))
+  (let (tmp)
+    (mode-icons-save-buffer-state ;; Otherwise may cause issues with trasient mark mode
+     (cond
+      ((and (stringp mode) (get-text-property 0 'mode-icons-p mode))
+       mode)
+      ((not (nth 1 icon-spec))
+       "")
+      ((and (stringp (nth 1 icon-spec)) (not (nth 2 icon-spec)))
+       (propertize (nth 1 icon-spec) 'display (nth 1 icon-spec)
+                   'mode-icons-p icon-spec))
+      ((or (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
+           (and (image-type-available-p 'xpm)
+                (mode-icons--get-font-xpm-file icon-spec)
+                (file-exists-p (mode-icons--get-font-xpm-file icon-spec))))
+       (mode-icons--get-font mode icon-spec face))
+      ((and (eq (nth 2 icon-spec) 'emoji)
+            (or (and (image-type-available-p 'png) (featurep 'emojify))
+                (and (image-type-available-p 'xpm)
+                     (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))))
+       (mode-icons--get-emoji mode icon-spec face))
+      ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'png))
+       (mode-icons--get-png mode icon-spec face))
+      ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'ext))
+       (propertize (format "%s" mode) 'display
+                   (mode-icons-get-icon-display
+                    (concat "ext-" (nth 1 icon-spec)) 'xpm-bw
+                    (or face
+                        (and (mode-icons--selected-window-active)
+                             'mode-line)
+                        'mode-line-inactive))
+                   'mode-icons-p (list (nth 0 icon-spec)
+                                       (concat "ext-" (nth 1 icon-spec))
+                                       'xpm-bw)))
+      (t (propertize (format "%s" mode) 'display
+                     (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec)
+                                                  (or face
+                                                      (and (mode-icons--selected-window-active)
+                                                           'mode-line)
+                                                      'mode-line-inactive))
+                     'mode-icons-p icon-spec))))))
 
 (defvar mode-icons-get-icon-spec (make-hash-table :test 'equal)
   "Hash table of icon-specifications.")
