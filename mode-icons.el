@@ -423,6 +423,11 @@ This only works with xpm files."
 (defvar mode-icons-get-icon-display (make-hash-table :test 'equal)
   "Hash table of `mode-icons-get-icon-display'.")
 
+(defun mode-icons-get-face (&optional face active)
+  "If FACE is unspecified, use ACTIVE to determine the face.
+ACTIVE tells if current window is active."
+  (or face (and active 'mode-line) 'mode-line-inactive))
+
 (defun mode-icons-get-icon-display (icon type &optional face active)
   "Get the value for the display property of ICON having TYPE.
 
@@ -434,7 +439,7 @@ FACE should be the face for rendering black and white xpm icons
 specified by type 'xpm-bw.
 
 ACTIVE is an indicator that the current window is active."
-  (let* ((face (or face (and active 'mode-line) 'mode-line-inactive))
+  (let* ((face (mode-icons-get-face face active))
          (key (list icon type face active
                     mode-icons-desaturate-inactive mode-icons-desaturate-active
                     mode-icons-grayscale-transform custom-enabled-themes))
@@ -966,18 +971,18 @@ ACTIVE is a flag telling if the current window is active."
          (xpm-name (mode-icons--get-png-xpm-file icon-spec t))
          (xpm-p (file-readable-p xpm))
          (png (mode-icons-get-icon-file (concat (nth 1 icon-spec) ".png")))
-         (png-p (file-readable-p png)))
+         (png-p (file-readable-p png))
+         (face (mode-icons-get-face face active)))
     (if xpm-p
         (propertize (format "%s" mode) 'display
                     (mode-icons-get-icon-display
                      xpm-name 'xpm
-                     (or face
-                         (and (mode-icons--selected-window-active)
-                              'mode-line)
-                         'mode-line-inactive) active)
+                     face active)
+                    'face face
                     'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm))
       (if (not png-p)
           (propertize (format "%s" mode)
+                      'face face
                       'mode-icons-p icon-spec)
         (mode-icons--convert-png-to-xpm png xpm)
         (propertize (format "%s" mode)
@@ -992,6 +997,7 @@ ACTIVE is a flag telling if the current window is active."
                                     :ascent 'center
                                     :heuristic-mask t
                                     :face face)
+                      'face face
                       'mode-icons-p icon-spec)))))
 
 (defcustom mode-icons-prefer-xpm-over-emoji nil
@@ -1011,17 +1017,14 @@ the actual font."
 ACTIVE is a flag for if  the current window is active."
   (let* ((xpm (mode-icons--get-emoji-xpm-file icon-spec))
          (xpm-name (mode-icons--get-emoji-xpm-file icon-spec t))
-         (xpm-p (file-readable-p xpm)))
+         (xpm-p (file-readable-p xpm))
+         (face (mode-icons-get-face face active)))
     (if (or (and mode-icons-prefer-xpm-over-emoji xpm-p)
             (and xpm-p (not (featurep 'emojify)))
             (and xpm-p (not (image-type-available-p 'png))))
         (propertize (format "%s" mode) 'display
                     (mode-icons-get-icon-display
-                     xpm-name 'xpm
-                     (or face
-                         (and (mode-icons--selected-window-active)
-                              'mode-line)
-                         'mode-line-inactive) active)
+                     xpm-name 'xpm face active)
                     'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm))
       (unless emojify-emojis
         (emojify-set-emoji-data))
@@ -1030,6 +1033,7 @@ ACTIVE is a flag for if  the current window is active."
              (image-type (intern (upcase (file-name-extension image-file)))))
         (if (not (file-exists-p image-file))
             (propertize (format "%s" mode)
+                        'face face
                         'mode-icons-p icon-spec)
           (when mode-icons-generate-emoji-xpms
             (mode-icons--convert-png-to-xpm image-file xpm))
@@ -1048,6 +1052,7 @@ ACTIVE is a flag for if  the current window is active."
                                     ;; :background (emojify--get-image-background beg end)
                                     ;; no-op if imagemagick is not available
                                     :height (emojify-default-font-height))
+                      'face face
                       'mode-icons-p icon-spec))))))
 
 (defcustom mode-icons-prefer-xpm-over-font nil
@@ -1068,18 +1073,15 @@ ACTIVE if a flag for if the current window is active."
   ;; Use `compose-region' because it allows clicable text.
   (let* ((xpm (mode-icons--get-font-xpm-file icon-spec))
          (xpm-name (mode-icons--get-font-xpm-file icon-spec t))
-         (xpm-p (file-readable-p xpm)))
+         (xpm-p (file-readable-p xpm))
+         (face (mode-icons-get-face face active)))
     (when (and (not xpm-p) mode-icons-generate-font-xpms)
       (mode-icons--create-font-xpm-file icon-spec))
     (if (and xpm-p (or mode-icons-prefer-xpm-over-font
                        (not (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec)))))
         (propertize (format "%s" mode) 'display
                     (mode-icons-get-icon-display
-                     xpm-name 'xpm
-                     (or face
-                         (and (mode-icons--selected-window-active)
-                              'mode-line)
-                         'mode-line-inactive) active)
+                     xpm-name 'xpm face active)
                     'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm-bw)
                     'face face)
       (with-temp-buffer
@@ -1092,10 +1094,7 @@ ACTIVE if a flag for if the current window is active."
                                                          (make-string 1 (nth 1 icon-spec)))
                                                     (nth 1 icon-spec)))
         (put-text-property (point-min) (point-max)
-                           'face (or face
-                                     (and (mode-icons--selected-window-active)
-                                          'mode-line)
-                                     'mode-line-inactive))
+                           'face face)
         (put-text-property (point-min) (point-max)
                            'mode-icons-p icon-spec)
         (buffer-string)))))
@@ -1127,20 +1126,11 @@ ACTIVE is a flag to tell if the current window is active."
       ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'ext))
        (propertize (format "%s" mode) 'display
                    (mode-icons-get-icon-display
-                    (concat "ext-" (nth 1 icon-spec)) 'xpm-bw
-                    (or face
-                        (and (mode-icons--selected-window-active)
-                             'mode-line)
-                        'mode-line-inactive) active)
+                    (concat "ext-" (nth 1 icon-spec)) 'xpm-bw face active)
                    'mode-icons-p (list (nth 0 icon-spec)
                                        (concat "ext-" (nth 1 icon-spec))
                                        'xpm-bw)))
-      (t (setq tmp (mode-icons-get-icon-display
-                    (nth 1 icon-spec) (nth 2 icon-spec)
-                    (or face
-                        (and (mode-icons--selected-window-active)
-                             'mode-line)
-                        'mode-line-inactive) active))
+      (t (setq tmp (mode-icons-get-icon-display (nth 1 icon-spec) (nth 2 icon-spec) face active))
          (cond
           ((and (plist-get tmp :xpm-bw) (plist-get tmp :icon))
            (setq new-icon-spec (list (nth 0 icon-spec) (plist-get tmp :icon) 'xpm-bw)))
@@ -1195,6 +1185,7 @@ FACE represents the face used when the icon is a xpm-bw image.
 ACTIVE represents if the window is active."
   (let* ((mode-name (format-mode-line mode))
          (icon-spec (mode-icons-get-icon-spec mode-name))
+         (face (mode-icons-get-face face active))
          ret)
     (if icon-spec
         (setq ret
@@ -1219,7 +1210,7 @@ ACTIVE represents if the window is active."
     (set (make-local-variable 'mode-icons-cached-mode-name)
          mode-name)
     (set (make-local-variable 'mode-icons--mode-name)
-         (mode-icons-get-mode-icon mode))
+         (mode-icons-get-mode-icon mode nil t))
     (when mode-icons-change-mode-name
       (setq mode-name mode-icons--mode-name))))
 
@@ -1287,11 +1278,10 @@ When DONT-UPDATE is non-nil, don't call `force-mode-line-update'"
 (defun mode-icons--generate-major-mode-item (&optional face)
   "Give rich strings needed for `major-mode' viewing.
 FACE is the face that the major mode item should be rendered in."
-  (let ((active (mode-icons--selected-window-active)))
+  (let* ((active (mode-icons--selected-window-active))
+         (face (mode-icons-get-face face active)))
     (eval `(propertize ,(mode-icons--recolor-string (or mode-icons--mode-name mode-name) active face)
-                       'face ',(or face
-                                   (and active 'mode-line)
-                                   'mode-line-inactive)
+                       'face ',face
                        ,@mode-icons-major-mode-base-text-properties))))
 
 ;;; selected take from powerline
@@ -1348,11 +1338,11 @@ FACE is the face that the major mode item should be rendered in."
   "Recolor `mode-icons' in STRING.
 ACTIVE tells if the current window is active.
 FACE is the face to recolor the icon to."
-  (let* ((active (and (not face) (or active (mode-icons--selected-window-active)))))
+  (let* ((face (mode-icons-get-face face active)))
     (mapconcat
      (lambda(str)
        (if (get-text-property 0 'display str)
-           (mode-icons--recolor-minor-mode-image str active)
+           (mode-icons--recolor-minor-mode-image str active face)
          str))
      (mode-icons--property-substrings string 'mode-icons-p)
      "")))
@@ -1361,40 +1351,26 @@ FACE is the face to recolor the icon to."
   "Recolor MODE image based on if the window is ACTIVE.
 Use FACE when specified."
   (let ((icon-spec (get-text-property 0 'mode-icons-p mode))
-        (display)
-        (face (or face)))
+        (face (mode-icons-get-face face active)))
     (cond
      ((and icon-spec (memq (nth 2 icon-spec) '(xpm xpm-bw)))
       (propertize mode 'display (mode-icons-get-icon-display
-                                 (nth 1 icon-spec) (nth 2 icon-spec)
-                                 (or face
-                                     (and active 'mode-line)
-                                     'mode-line-inactive) active)
-                  'face (or face
-                            (and active 'mode-line)
-                            'mode-line-inactive)
+                                 (nth 1 icon-spec) (nth 2 icon-spec) face active)
+                  'face face
                   'mode-icons-p icon-spec))
      ((and icon-spec (memq (nth 2 icon-spec) '(emoji))
            (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))
       (propertize mode 'display (mode-icons-get-icon-display
                                  (mode-icons--get-emoji-xpm-file icon-spec t)
-                                 'xpm
-                                 (or face
-                                     (and active 'mode-line)
-                                     'mode-line-inactive) active)
-                  'face (or face
-                            (and active 'mode-line)
-                            'mode-line-inactive)
-                  'mode-icons-p icon-spec))
-     (t (propertize mode
-                    'face (or face
-                              (and active 'mode-line)
-                              'mode-line-inactive))))))
+                                 'xpm face active) 'face face
+                                 'mode-icons-p icon-spec))
+     (t (propertize mode 'face face)))))
 
 (defun mode-icons--generate-minor-mode-list (&optional face)
   "Extracts all rich strings necessary for the minor mode list.
 When FACE is non-nil, use FACE to render the `minor-mode-alist'."
-  (let ((active (mode-icons--selected-window-active)))
+  (let* ((active (mode-icons--selected-window-active))
+         (face (mode-icons-get-face face active)))
     (delete " " (delete "" (mapcar (lambda(mode)
                                      (concat " " (eval `(propertize ,(mode-icons--recolor-minor-mode-image mode active face)
                                                                     ,@mode-icons-minor-mode-base-text-properties))))
@@ -1403,7 +1379,8 @@ When FACE is non-nil, use FACE to render the `minor-mode-alist'."
 (defun mode-icons--generate-narrow (&optional face)
   "Extracts all rich strings necessary for narrow indicator.
 When FACE is non-nil, use FACE to render the narrow indicator."
-  (let ((active (mode-icons--selected-window-active))
+  (let* ((active (mode-icons--selected-window-active))
+         (face (mode-icons-get-face active face))
         icon-spec)
     (delete " " (delete "" (mapcar (lambda(mode)
                                      (concat " " (eval `(propertize
