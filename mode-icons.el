@@ -423,7 +423,7 @@ This only works with xpm files."
 (defvar mode-icons-get-icon-display (make-hash-table :test 'equal)
   "Hash table of `mode-icons-get-icon-display'.")
 
-(defun mode-icons-get-icon-display (icon type &optional face)
+(defun mode-icons-get-icon-display (icon type &optional face active)
   "Get the value for the display property of ICON having TYPE.
 
 ICON should be a string naming the file of the icon, without its
@@ -431,9 +431,10 @@ extension.  Type should be a symbol designating the file type for
 the icon.
 
 FACE should be the face for rendering black and white xpm icons
-specified by type 'xpm-bw."
-  (let* ((active (mode-icons--selected-window-active))
-         (face (or face (and active 'mode-line) 'mode-line-inactive))
+specified by type 'xpm-bw.
+
+ACTIVE is an indicator that the current window is active."
+  (let* ((face (or face (and active 'mode-line) 'mode-line-inactive))
          (key (list icon type face active
                     mode-icons-desaturate-inactive mode-icons-desaturate-active
                     mode-icons-grayscale-transform custom-enabled-themes))
@@ -466,12 +467,12 @@ specified by type 'xpm-bw."
                    (get-text-property 0 'display tmp))
                   ;; Shouldn't get here...
                   ((and (eq type 'ext) (setq tmp (mode-icons--ext-available-p (list "" icon type))))
-                   (mode-icons-get-icon-display (concat "ext-" (downcase icon)) 'xpm-bw face))
+                   (mode-icons-get-icon-display (concat "ext-" (downcase icon)) 'xpm-bw face active))
                   ((and (image-type-available-p 'xpm)
                         (setq tmp (mode-icons--get-font-xpm-file (list "" icon type)))
                         (file-exists-p tmp))
                    (setq tmp )
-                   (mode-icons-get-icon-display (mode-icons--get-font-xpm-file (list "" icon type) t) 'xpm-bw face))
+                   (mode-icons-get-icon-display (mode-icons--get-font-xpm-file (list "" icon type) t) 'xpm-bw face active))
                   (t nil))
                  mode-icons-get-icon-display))))
 
@@ -957,9 +958,10 @@ For :herb: it would be e-herb."
             (concat "e-" file)
           (mode-icons-get-icon-file (concat "e-" file ".xpm")))))))
 
-(defun mode-icons--get-png (mode icon-spec &optional face)
+(defun mode-icons--get-png (mode icon-spec &optional face active)
   "Get MODE for png ICON-SPEC using FACE.
-If possible, convert the png file to an xpm file."
+If possible, convert the png file to an xpm file.
+ACTIVE is a flag telling if the current window is active."
   (let* ((xpm (mode-icons--get-png-xpm-file icon-spec))
          (xpm-name (mode-icons--get-png-xpm-file icon-spec t))
          (xpm-p (file-readable-p xpm))
@@ -972,7 +974,7 @@ If possible, convert the png file to an xpm file."
                      (or face
                          (and (mode-icons--selected-window-active)
                               'mode-line)
-                         'mode-line-inactive))
+                         'mode-line-inactive) active)
                     'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm))
       (if (not png-p)
           (propertize (format "%s" mode)
@@ -1004,8 +1006,9 @@ the actual font."
   :type 'boolean
   :group 'mode-icons)
 
-(defun mode-icons--get-emoji (mode icon-spec &optional face)
-  "Get MODE emoji for ICON-SPEC using FACE."
+(defun mode-icons--get-emoji (mode icon-spec &optional face active)
+  "Get MODE emoji for ICON-SPEC using FACE.
+ACTIVE is a flag for if  the current window is active."
   (let* ((xpm (mode-icons--get-emoji-xpm-file icon-spec))
          (xpm-name (mode-icons--get-emoji-xpm-file icon-spec t))
          (xpm-p (file-readable-p xpm)))
@@ -1018,7 +1021,7 @@ the actual font."
                      (or face
                          (and (mode-icons--selected-window-active)
                               'mode-line)
-                         'mode-line-inactive))
+                         'mode-line-inactive) active)
                     'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm))
       (unless emojify-emojis
         (emojify-set-emoji-data))
@@ -1059,8 +1062,9 @@ the actual font."
   :type 'boolean
   :group 'mode-icons)
 
-(defun mode-icons--get-font (mode icon-spec &optional face)
-  "Get font for MODE based on ICON-SPEC, and FACE."
+(defun mode-icons--get-font (mode icon-spec &optional face active)
+  "Get font for MODE based on ICON-SPEC, and FACE.
+ACTIVE if a flag for if the current window is active."
   ;; Use `compose-region' because it allows clicable text.
   (let* ((xpm (mode-icons--get-font-xpm-file icon-spec))
          (xpm-name (mode-icons--get-font-xpm-file icon-spec t))
@@ -1075,7 +1079,7 @@ the actual font."
                      (or face
                          (and (mode-icons--selected-window-active)
                               'mode-line)
-                         'mode-line-inactive))
+                         'mode-line-inactive) active)
                     'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm-bw)
                     'face face)
       (with-temp-buffer
@@ -1096,12 +1100,13 @@ the actual font."
                            'mode-icons-p icon-spec)
         (buffer-string)))))
 
-(defun mode-icons-propertize-mode (mode icon-spec &optional face)
+(defun mode-icons-propertize-mode (mode icon-spec &optional face active)
   "Propertize MODE with ICON-SPEC.
 
 MODE should be a string, the name of the mode to propertize.
 ICON-SPEC should be a specification from `mode-icons'.
-FACE is the face to match when a xpm-bw image is used."
+FACE is the face to match when a xpm-bw image is used.
+ACTIVE is a flag to tell if the current window is active."
   (let (tmp new-icon-spec)
     (mode-icons-save-buffer-state ;; Otherwise may cause issues with trasient mark mode
      (cond
@@ -1114,11 +1119,11 @@ FACE is the face to match when a xpm-bw image is used."
                    'mode-icons-p icon-spec))
       ((mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec))
        ;; (propertize mode 'display (nth 1 icon-spec) 'mode-icons-p t)
-       (mode-icons--get-font mode icon-spec face))
+       (mode-icons--get-font mode icon-spec face active))
       ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'emoji))
-       (mode-icons--get-emoji mode icon-spec face))
+       (mode-icons--get-emoji mode icon-spec face active))
       ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'png))
-       (mode-icons--get-png mode icon-spec face))
+       (mode-icons--get-png mode icon-spec face active))
       ((and (stringp (nth 1 icon-spec)) (eq (nth 2 icon-spec) 'ext))
        (propertize (format "%s" mode) 'display
                    (mode-icons-get-icon-display
@@ -1126,7 +1131,7 @@ FACE is the face to match when a xpm-bw image is used."
                     (or face
                         (and (mode-icons--selected-window-active)
                              'mode-line)
-                        'mode-line-inactive))
+                        'mode-line-inactive) active)
                    'mode-icons-p (list (nth 0 icon-spec)
                                        (concat "ext-" (nth 1 icon-spec))
                                        'xpm-bw)))
@@ -1135,7 +1140,7 @@ FACE is the face to match when a xpm-bw image is used."
                     (or face
                         (and (mode-icons--selected-window-active)
                              'mode-line)
-                        'mode-line-inactive)))
+                        'mode-line-inactive) active))
          (cond
           ((and (plist-get tmp :xpm-bw) (plist-get tmp :icon))
            (setq new-icon-spec (list (nth 0 icon-spec) (plist-get tmp :icon) 'xpm-bw)))
@@ -1184,17 +1189,18 @@ icon as well."
   :type 'boolean
   :group 'mode-icons)
 
-(defun mode-icons-get-mode-icon (mode &optional face)
+(defun mode-icons-get-mode-icon (mode &optional face active)
   "Get the icon for MODE, if there is one.
-FACE represents the face used when the icon is a xpm-bw image."
+FACE represents the face used when the icon is a xpm-bw image.
+ACTIVE represents if the window is active."
   (let* ((mode-name (format-mode-line mode))
          (icon-spec (mode-icons-get-icon-spec mode-name))
          ret)
     (if icon-spec
         (setq ret
               (if mode-icons-show-mode-name
-                      (concat (mode-icons-propertize-mode mode-name icon-spec) " " mode-name)
-                    (mode-icons-propertize-mode mode-name icon-spec face)))
+                      (concat (mode-icons-propertize-mode mode-name icon-spec active) " " mode-name)
+                    (mode-icons-propertize-mode mode-name icon-spec face active)))
       (setq ret mode-name))
     ;; Don't hide major mode names...
     (when (string= ret "")
@@ -1363,7 +1369,7 @@ Use FACE when specified."
                                  (nth 1 icon-spec) (nth 2 icon-spec)
                                  (or face
                                      (and active 'mode-line)
-                                     'mode-line-inactive))
+                                     'mode-line-inactive) active)
                   'face (or face
                             (and active 'mode-line)
                             'mode-line-inactive)
@@ -1375,7 +1381,7 @@ Use FACE when specified."
                                  'xpm
                                  (or face
                                      (and active 'mode-line)
-                                     'mode-line-inactive))
+                                     'mode-line-inactive) active)
                   'face (or face
                             (and active 'mode-line)
                             'mode-line-inactive)
@@ -1403,7 +1409,7 @@ When FACE is non-nil, use FACE to render the narrow indicator."
                                      (concat " " (eval `(propertize
                                                          ,(if (setq icon-spec (mode-icons-get-icon-spec (concat " " mode)))
                                                               (mode-icons--recolor-minor-mode-image
-                                                               (mode-icons-propertize-mode (concat " " mode) icon-spec)
+                                                               (mode-icons-propertize-mode (concat " " mode) icon-spec active)
                                                                active face)
                                                             mode)
                                                          ,@mode-icons-narrow-text-properties))))
@@ -1425,11 +1431,11 @@ FACE is the face to render the icon in."
                 (setq ro (or (cond
                               ((string= "%" ro)
                                (if (setq icon-spec (mode-icons-get-icon-spec 'read-only))
-                                   (mode-icons-propertize-mode 'read-only icon-spec)
+                                   (mode-icons-propertize-mode 'read-only icon-spec active)
                                  ro))
                               (t
                                (if (setq icon-spec (mode-icons-get-icon-spec 'writable))
-                                   (mode-icons-propertize-mode 'writable icon-spec)
+                                   (mode-icons-propertize-mode 'writable icon-spec active)
                                  ro)))
                              "")
                       ro (mode-icons--recolor-minor-mode-image ro active face))
@@ -1462,19 +1468,19 @@ FACE is the face to render the icon in."
                                      ((not (stringp mod)) "")
                                      ((char-equal ?s (aref mod 0))
                                       (if (setq icon-spec (mode-icons-get-icon-spec 'steal))
-                                          (mode-icons-propertize-mode 'steal icon-spec)
+                                          (mode-icons-propertize-mode 'steal icon-spec active)
                                         mod))
                                      ((char-equal ?! (aref mod 0))
                                       (if (setq icon-spec (mode-icons-get-icon-spec 'modified-outside))
-                                          (mode-icons-propertize-mode 'modified-outside icon-spec)
+                                          (mode-icons-propertize-mode 'modified-outside icon-spec active)
                                         mod))
                                      ((char-equal ?* (aref mod 0))
                                       (if (setq icon-spec (mode-icons-get-icon-spec 'save))
-                                          (mode-icons-propertize-mode 'save icon-spec)
+                                          (mode-icons-propertize-mode 'save icon-spec active)
                                         mod))
                                      (t
                                       (if (setq icon-spec (mode-icons-get-icon-spec 'saved))
-                                          (mode-icons-propertize-mode 'saved icon-spec)
+                                          (mode-icons-propertize-mode 'saved icon-spec active)
                                         mod)))
                                     ""))
                       (setq mod (mode-icons--recolor-minor-mode-image mod active face))
@@ -1547,23 +1553,23 @@ FACE is the face that will be used to render the segment."
                    ((string= "(Unix)" str)
                     (setq lt2 " LF")
                     (if (setq icon-spec (mode-icons-get-icon-spec 'unix))
-                        (mode-icons-propertize-mode 'unix icon-spec)
+                        (mode-icons-propertize-mode 'unix icon-spec active)
                       str))
                    ((or (string= str "(DOS)")
                         (string= str "\\"))
                     (setq lt2 " CRLF")
                     (if (setq icon-spec (mode-icons-get-icon-spec 'win))
-                        (mode-icons-propertize-mode 'win icon-spec)
+                        (mode-icons-propertize-mode 'win icon-spec active)
                       str))
                    ((string= str "(Mac)")
                     (setq lt2 " CR")
                     (if (setq icon-spec (mode-icons-get-icon-spec 'apple))
-                        (mode-icons-propertize-mode 'apple icon-spec)
+                        (mode-icons-propertize-mode 'apple icon-spec active)
                       str))
                    ((string= str ":")
                     (setq lt2 " Undecided")
                     (if (setq icon-spec (mode-icons-get-icon-spec 'undecided))
-                        (mode-icons-propertize-mode 'undecided icon-spec)
+                        (mode-icons-propertize-mode 'undecided icon-spec active)
                       str))
                    (t str))
                   ""))
