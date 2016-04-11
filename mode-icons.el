@@ -476,7 +476,7 @@ ACTIVE is an indicator that the current window is active."
                   ((and (image-type-available-p 'xpm)
                         (setq tmp (mode-icons--get-font-xpm-file (list "" icon type)))
                         (file-exists-p tmp))
-                   (setq tmp )
+                   (setq tmp nil)
                    (mode-icons-get-icon-display (mode-icons--get-font-xpm-file (list "" icon type) t) 'xpm-bw face active))
                   (t nil))
                  mode-icons-get-icon-display))))
