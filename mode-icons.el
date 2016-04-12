@@ -454,20 +454,37 @@ ACTIVE is an indicator that the current window is active."
                      (cond
                       ((and mode-icons-grayscale-transform (eq type 'xpm-bw))
                        (create-image (mode-icons-get-icon-display-xpm-bw-face icon-path face)
-                                     'xpm t :ascent 'center
+                                     ;; Use imagemagick for rescaling...
+                                     (or (and (fboundp 'imagemagick-types)
+                                              (memq 'png (imagemagick-types)) 'imagemagick)
+                                         'xpm)
+                                     t :ascent 'center
                                      :face face
                                      :xpm-bw t
                                      :icon icon))
                       ((eq type 'xpm-bw)
-                       `(image :type xpm :file ,icon-path :ascent center :face ',face :icon ,icon))
+                       (create-image icon-path
+                                     (or (and (fboundp 'imagemagick-types)
+                                              (memq 'png (imagemagick-types)) 'imagemagick)
+                                         'xpm)
+                                     :ascent 'center
+                                     :face face
+                                     :icon icon))
                       ((and (eq type 'xpm)
                             (or (and active mode-icons-desaturate-active)
                                 (and (not active) mode-icons-desaturate-inactive)))
                        (create-image (mode-icons-desaturate-xpm icon-path face)
-                                     'xpm t :ascent 'center
-                                     :face face :icon icon))
+                                     (or (and (fboundp 'imagemagick-types)
+                                              (memq 'png (imagemagick-types)) 'imagemagick)
+                                         'xpm) t :ascent 'center
+                                         :face face :icon icon))
                       (t
-                       `(image :type ,(or (and (eq type 'jpg) 'jpeg) type) :file ,icon-path :ascent center :face ',face :icon ,icon)))))
+                       (create-image icon-path
+                                     (or (and (fboundp 'imagemagick-types)
+                                              (memq (or (and (eq type 'jpg) 'jpeg) type) (imagemagick-types))
+                                              'imagemagick)
+                                         (or (and (eq type 'jpg) 'jpeg) type))
+                                     :ascent 'center :face face :icon icon)))))
                   ((and (eq type 'emoji) (setq tmp (mode-icons--get-emoji " " (list "" icon type) face)))
                    (get-text-property 0 'display tmp))
                   ;; Shouldn't get here...
