@@ -478,7 +478,8 @@ ACTIVE is an indicator that the current window is active."
                        (create-image (mode-icons-desaturate-xpm icon-path face)
                                      (or (and (fboundp 'imagemagick-types)
                                               (memq 'png (imagemagick-types)) 'imagemagick)
-                                         'xpm) t :ascent 'center
+                                         'xpm) t
+                                         :ascent 'center
                                          :height (window-mode-line-height)
                                          :face face :icon icon))
                       (t
@@ -487,6 +488,7 @@ ACTIVE is an indicator that the current window is active."
                                               (memq (or (and (eq type 'jpg) 'jpeg) type) (imagemagick-types))
                                               'imagemagick)
                                          (or (and (eq type 'jpg) 'jpeg) type))
+                                     nil 
                                      :height (window-mode-line-height)
                                      :ascent 'center :face face :icon icon)))))
                   ((and (eq type 'emoji) (setq tmp (mode-icons--get-emoji " " (list "" icon type) face)))
@@ -1011,9 +1013,9 @@ ACTIVE is a flag telling if the current window is active."
                       (create-image png
                                     ;; use imagemagick if available and supports PNG images
                                     ;; (allows resizing images)
-                                    (when (and (fboundp 'imagemagick-types)
-                                               (memq 'png (imagemagick-types)))
-                                      'imagemagick)
+                                    (or (and (and (fboundp 'imagemagick-types)
+                                                  (memq 'png (imagemagick-types)))
+                                             'imagemagick) 'png)
                                     nil
                                     :height (window-mode-line-height)
                                     :ascent 'center
@@ -1064,9 +1066,9 @@ ACTIVE is a flag for if  the current window is active."
                       (create-image image-file
                                     ;; use imagemagick if available and supports PNG images
                                     ;; (allows resizing images)
-                                    (when (and (fboundp 'imagemagick-types)
-                                               (memq image-type (imagemagick-types)))
-                                      'imagemagick)
+                                    (or (and (and (fboundp 'imagemagick-types)
+                                                  (memq image-type (imagemagick-types)))
+                                             'imagemagick) 'png)
                                     nil
                                     :ascent 'center
                                     :heuristic-mask t
