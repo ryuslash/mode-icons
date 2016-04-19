@@ -86,4 +86,19 @@ and use the black and white image by setting:
 #+BEGIN_SRC emacs-lisp
 (setq mode-icons-grayscale-transform nil)
 #+END_SRC
+** Creating xpm images from fonts
+To create/recreate all the xpm images for the font images, you can
+run =M-x mode-icons--convert-all-font-icons-to-xpm=.
+
+This requires a working =gimp= installation, and all the fonts for the
+icons installed.  This will start an inferior scheme process for
+=gimp= in =*mode-icons-gimp*= and convert all the images to xpm files.
+
+After the images are created, you can stop the =gimp= process by
+typing:
+
+=M-x mode-icons--stop-gimp-inferior=
+
+This should be stopped evetually if there is no input received to gimp.
+
 
