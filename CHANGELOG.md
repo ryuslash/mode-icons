@@ -23,6 +23,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Drag stuff minor mode icon (from Font Awesome).
 - Helm minor mode icon.
 - Javascript-IDE mode (js2-mode) icon.
+- Auto indent minor mode (from Font Awesome)
 
 ### Changed
 
