@@ -24,6 +24,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Helm minor mode icon.
 - Javascript-IDE mode (js2-mode) icon.
 - Auto indent minor mode (from Font Awesome)
+- Automatic setup of arbitrary font, currently still support
+  IcoMoon-Free, FontAwesome, font-mfizz and github-octicons.
 
 ### Changed
 

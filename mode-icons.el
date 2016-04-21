@@ -134,19 +134,6 @@ This was stole/modified from `c-save-buffer-state'"
             (buffer-modified-p)
             (set-buffer-modified-p nil)))))
 
-(defmacro mode-icons-define-font (font)
-  "Define FONT for `mode-icons'."
-  `(progn
-     (defvar ,(intern (format "mode-icons-font-spec-%s" font))
-       (and (member ,(format "%s" font) (font-family-list)) (font-spec :name ,(format "%s" font))))
-     (defvar ,(intern (format "mode-icons-font-%s" font))
-       (and (member ,(format "%s" font) (font-family-list)) (find-font ,(intern (format "mode-icons-font-spec-%s" font)))))))
-
-(mode-icons-define-font "github-octicons")
-(mode-icons-define-font "font-mfizz")
-(mode-icons-define-font "FontAwesome")
-(mode-icons-define-font "IcoMoon-Free")
-
 (defcustom mode-icons
   `(("\\`CSS\\'" "css" xpm)
     ("\\`Coffee\\'" "coffee" xpm-bw)
@@ -270,13 +257,9 @@ without the extension.  And the third being the type of icon."
                 (choice
                  (string :tag "Icon Name")
                  (integer :tag "Font Glyph Code")
-                 (const :tag "Suppress" nil))
+                 (const :tag "ess" nil))
                 (choice
                  (const :tag "text" nil)
-                 (const :tag "Octicons" github-octicons)
-                 (const :tag "Fizzed" font-mfizz)
-                 (const :tag "Font Awesome" FontAwesome)
-                 (const :tag "Ico Moon Free" IcoMoon-Free)
                  (const :tag "png" png)
                  (const :tag "gif" gif)
                  (const :tag "jpeg" jpeg)
@@ -285,7 +268,8 @@ without the extension.  And the third being the type of icon."
                  (const :tag "xpm" xpm)
                  (const :tag "Black and White xpm that changes color to match the mode-line face" xpm-bw)
                  (const :tag "Emoji" emoji)
-                 (const :tag "Mode Icons Generated file-type" ext))))
+                 (const :tag "Mode Icons Generated file-type" ext)
+                 (symbol :tag "Font"))))
   :group 'mode-icons)
 
 (defvar mode-icons-get-xpm-string (make-hash-table :test 'equal))
@@ -631,22 +615,27 @@ Use EVENT to determine location."
 When DONT-REGISTER is non-nil, don't register the font.
 Otherwise, register the font for use in the mode-line and
 everywhere else."
-  (when (and (or (integerp char)
-                 (and (stringp char) (= 1 (length char))))
-             (boundp (intern (format "mode-icons-font-spec-%s" font)))
-             (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
-    (let* ((char (or (and (integerp char) char)
-                     (and (stringp char) (= 1 (length char))
-                          (aref (vconcat char) 0))))
-           (found-char-p (assoc char mode-icons-font-register-alist))
-           (char-font-p (and found-char-p (eq (cdr found-char-p) font))))
-      (cond
-       (char-font-p t)
-       (found-char-p t)
-       (t ;; not yet registered.
-        (set-fontset-font t (cons char char) (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
-        (push (cons char font) mode-icons-font-register-alist)
-        t)))))
+  (if (memq font '(ext emoji xpm xbm jpg jpeg gif png nil)) nil
+    (unless (boundp (intern (format "mode-icons-font-spec-%s" font)))
+      (set (intern (format "mode-icons-font-spec-%s" font))
+           (and (member (format "%s" font) (font-family-list))
+                (font-spec :name (format "%s" font)))))
+    (when (and (or (integerp char)
+                   (and (stringp char) (= 1 (length char))))
+               (boundp (intern (format "mode-icons-font-spec-%s" font)))
+               (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
+      (let* ((char (or (and (integerp char) char)
+                       (and (stringp char) (= 1 (length char))
+                            (aref (vconcat char) 0))))
+             (found-char-p (assoc char mode-icons-font-register-alist))
+             (char-font-p (and found-char-p (eq (cdr found-char-p) font))))
+        (cond
+         (char-font-p t)
+         (found-char-p t)
+         (t ;; not yet registered.
+          (set-fontset-font t (cons char char) (symbol-value (intern (format "mode-icons-font-spec-%s" font))))
+          (push (cons char font) mode-icons-font-register-alist)
+          t))))))
 
 (defun mode-icons-supported-p (icon-spec)
   "Determine if ICON-SPEC is suppored on your system."
