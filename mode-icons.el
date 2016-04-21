@@ -63,6 +63,15 @@
 
 ;;; Code:
 
+(declare-function comint-send-string "comint")
+(declare-function emojify-set-emoji-data "emojify")
+(declare-function ht-get "ht")
+(declare-function powerline-minor-modes "powerline")
+(declare-function powerline-raw "powerline-raw")
+
+(declare-function mode-icons--real-powerline-major-mode "powerline")
+(declare-function mode-icons--powerline-major-mode "mode-icons")
+
 (require 'cl-lib)
 (require 'color)
 (require 'emojify nil t)
@@ -1710,7 +1719,6 @@ saved in `mode-icons--real-powerline-minor-modes'."
        (if mode-icons-mode
            (mode-icons--generate-minor-mode-list face)
          (mode-icons--real-powerline-minor-modes face pad)))
-     (declare-function mode-icons--real-powerline-major-mode "powerline")
      (fset 'mode-icons--real-powerline-major-mode #'powerline-minor-modes)
      (defun mode-icons--powerline-major-mode (&optional face pad)
        "Powerline major modes is replaced by this function.
