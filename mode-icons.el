@@ -285,7 +285,7 @@ without the extension.  And the third being the type of icon."
 If ICON-PATH is a string, return that."
   (or (and (file-exists-p icon-path)
            (or (gethash icon-path mode-icons-get-xpm-string)
-               (puthash icon-path (with-temp-buffer (insert-file-contents icon-path) (buffer-string))
+               (puthash icon-path (mode-icons-save-buffer-state (with-temp-buffer (insert-file-contents icon-path) (buffer-string)))
                         mode-icons-get-xpm-string)))
       (and (stringp icon-path) icon-path)))
 
@@ -349,11 +349,12 @@ Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
   "Get a list of rgb colors based on ICON-PATH xpm icon.
 ICON-PATH can be a XPM string or a XPM file."
   (let (colors)
-    (with-temp-buffer
-      (insert (mode-icons-get-xpm-string icon-path))
-      (goto-char (point-min))
-      (while (re-search-forward "#[0-9A-Fa-f]\\{6\\}" nil t)
-        (push (color-name-to-rgb (match-string 0)) colors)))
+    (mode-icons-save-buffer-state
+     (with-temp-buffer
+       (insert (mode-icons-get-xpm-string icon-path))
+       (goto-char (point-min))
+       (while (re-search-forward "#[0-9A-Fa-f]\\{6\\}" nil t)
+         (push (color-name-to-rgb (match-string 0)) colors))))
     colors))
 
 (defun mode-icons-desaturate-colors (colors &optional foreground background)
@@ -1109,20 +1110,21 @@ ACTIVE if a flag for if the current window is active."
                      xpm-name 'xpm face active)
                     'mode-icons-p (list (nth 0 icon-spec) xpm-name 'xpm-bw)
                     'face face)
-      (with-temp-buffer
-        (if (stringp mode)
-            (insert mode)
-          (insert (or (and (integerp (nth 1 icon-spec))
-                           (make-string 1 (nth 1 icon-spec)))
-                      (nth 1 icon-spec))))
-        (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
-                                                         (make-string 1 (nth 1 icon-spec)))
-                                                    (nth 1 icon-spec)))
-        (put-text-property (point-min) (point-max)
-                           'face face)
-        (put-text-property (point-min) (point-max)
-                           'mode-icons-p icon-spec)
-        (buffer-string)))))
+      (mode-icons-save-buffer-state
+       (with-temp-buffer
+         (if (stringp mode)
+             (insert mode)
+           (insert (or (and (integerp (nth 1 icon-spec))
+                            (make-string 1 (nth 1 icon-spec)))
+                       (nth 1 icon-spec))))
+         (compose-region (point-min) (point-max) (or (and (integerp (nth 1 icon-spec))
+                                                          (make-string 1 (nth 1 icon-spec)))
+                                                     (nth 1 icon-spec)))
+         (put-text-property (point-min) (point-max)
+                            'face face)
+         (put-text-property (point-min) (point-max)
+                            'mode-icons-p icon-spec)
+         (buffer-string))))))
 
 (defun mode-icons-propertize-mode (mode icon-spec &optional face active)
   "Propertize MODE with ICON-SPEC.
