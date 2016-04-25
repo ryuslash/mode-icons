@@ -5,7 +5,7 @@
 
 ;; Author: Tom Willemse <tom@ryuslash.org>
 ;; Keywords: multimedia
-;; Version: 0.3.0
+;; Version: 0.4.0
 ;; URL: http://ryuslash.org/projects/mode-icons.html
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
@@ -1444,7 +1444,7 @@ FACE is the face to render the icon in."
                 (when (and mode-icons-read-only-space
                            (not (string= ro "")))
                   (setq ro (concat ro " ")))
-                ro) 
+                ro)
             ,@mode-icons-read-only-text-properties))))
 
 (defcustom mode-icons-modified-status-space t
