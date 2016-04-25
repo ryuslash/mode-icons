@@ -40,11 +40,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   (both active and inactive, for major and minor modes)
 - Allow displaying the major mode name in the mode-line only, or both
   the mode-line and in other buffers, like ibuffer.
-  - If the =mode-name= variable is changed, then anything that looks
+  - If the `mode-name` variable is changed, then anything that looks
     at this variable will pick up the icon.
-  - This can be customized by the variable =mode-icons-change-mode-name=.
+  - This can be customized by the variable
+    `mode-icons-change-mode-name`.
   - This should be modified for packages like =powerline= and
-    =smart-mode-line=.
+    `smart-mode-line`.
 - Allow desaturating and matching the mode-line face colors for xpm
   images.
 - Allow emojis to be used as mode-icons
