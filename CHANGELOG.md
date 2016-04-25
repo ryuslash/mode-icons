@@ -44,7 +44,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
     at this variable will pick up the icon.
   - This can be customized by the variable
     `mode-icons-change-mode-name`.
-  - This should be modified for packages like =powerline= and
+  - This should be modified for packages like `powerline` and
     `smart-mode-line`.
 - Allow desaturating and matching the mode-line face colors for xpm
   images.
