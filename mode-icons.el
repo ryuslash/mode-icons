@@ -201,6 +201,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Info\\'" #xf05a FontAwesome)
     ("\\` ?Narrow\\'" #xf066 FontAwesome)
     ("\\`Dockerfile\\'" "docker" xpm)
+    ("\\`Spacemacs buffer\\'" "spacemacs" png)
     (read-only #xf023 FontAwesome)
     (writable #xf09c FontAwesome)
     (save #xf0c7 FontAwesome)
