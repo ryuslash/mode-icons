@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+- Icon for spacemacs buffer.
+
 ## [0.4.0]
 
 ### Added
