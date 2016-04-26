@@ -971,6 +971,16 @@ When ICON-NAME is non-nil, return the mode-icons icon name."
       (nth 1 icon-spec)
     (mode-icons-get-icon-file (concat (nth 1 icon-spec) ".xpm"))))
 
+(defun mode-icons--convert-all-png-icons-to-xpm ()
+  "Convert all png icons to xpm files."
+  (interactive)
+  (setq mode-icons--convert-png-to-xpm (make-hash-table :test 'equal))
+  (dolist (icon-spec mode-icons)
+    (when (eq 'png (nth 2 icon-spec))
+      (mode-icons--convert-png-to-xpm
+       (mode-icons-get-icon-file (concat (nth 1 icon-spec) ".png"))
+       (mode-icons-get-icon-file (concat (nth 1 icon-spec) ".xpm"))))))
+
 (defun mode-icons--get-emoji-xpm-file (icon-spec &optional icon-name)
   "Get the emoji xpm file name from ICON-SPEC.
 This only supports emoji enclosed in a \":\" like :herb:.
