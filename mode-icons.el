@@ -170,6 +170,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\` ?yas\\'" "yas" xpm)
     ("\\` ?hs\\'" "hs" xpm)
     ("\\`Markdown\\'" #xf0c9 github-octicons)
+    ("\\`GFM\\'" #xf0c9 github-octicons)
     ("\\`Scala\\'" #xf15b font-mfizz)
     ("\\`Magit\\'" #xf1d2 FontAwesome)
     ("\\` Pulls\\'" #xf092 FontAwesome)
