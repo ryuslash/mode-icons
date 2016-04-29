@@ -5,7 +5,22 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
 - Icon for spacemacs buffer.
+- Icon for Isearch (from Font Awesome)
+
+### Changed
+
+- Git Flavored markdown also uses markdown icon from Font Awesome.
+- Minor modes icons are now updated:
+  - After changing a major mode
+  - After activating isearch-mode (new)
+  - After executing a command with `command-execute` (new). This
+    allows `execute-extended-command` and `ido` to display the icons
+    immediately after activating an iconified mode.
+- Powerline now recolors lines correctly by modified powerline-raw
+  function.
 
 ## [0.4.0]
 
