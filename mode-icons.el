@@ -68,7 +68,9 @@
 (declare-function ht-get "ht")
 (declare-function powerline-minor-modes "powerline")
 (declare-function powerline-raw "powerline-raw")
-
+(declare-function pl/add-text-property "powerline")
+(declare-function mode-icons--real-powerline-raw "powerline")
+(declare-function mode-icons--powerline-raw "mode-icons")
 (declare-function mode-icons--real-powerline-major-mode "powerline")
 (declare-function mode-icons--powerline-major-mode "mode-icons")
 
@@ -1105,7 +1107,7 @@ the actual font."
 (defun mode-icons--get-font (mode icon-spec &optional face active)
   "Get font for MODE based on ICON-SPEC, and FACE.
 ACTIVE if a flag for if the current window is active."
-  ;; Use `compose-region' because it allows clicable text.
+  ;; Use `compose-region' because it allows clickable text.
   (let* ((xpm (mode-icons--get-font-xpm-file icon-spec))
          (xpm-name (mode-icons--get-font-xpm-file icon-spec t))
          (xpm-p (file-readable-p xpm))
@@ -1374,12 +1376,18 @@ FACE is the face that the major mode item should be rendered in."
   "Recolor `mode-icons' in STRING.
 ACTIVE tells if the current window is active.
 FACE is the face to recolor the icon to."
-  (let* ((face (mode-icons--get-face face active)))
+  (let* ((face (mode-icons--get-face face active))
+         icon-spec)
     (mapconcat
      (lambda(str)
-       (if (get-text-property 0 'display str)
-           (mode-icons--recolor-minor-mode-image str active face)
-         str))
+       (cond
+        ((get-text-property 0 'display str)
+         (mode-icons--recolor-minor-mode-image str active face))
+        ((and (setq icon-spec (get-text-property 0 'mode-icons-p str))
+              (mode-icons-supported-font-p (nth 1 icon-spec) (nth 2 icon-spec)))
+         (mode-icons--get-font str icon-spec face active))
+        (t
+         str)))
      (mode-icons--property-substrings string 'mode-icons-p)
      "")))
 
@@ -1730,7 +1738,25 @@ saved in `mode-icons--real-powerline-major-mode'."
        (if mode-icons-mode
            (powerline-raw (format-mode-line (mode-icons--generate-major-mode-item face) face) face pad)
          (mode-icons--real-powerline-major-mode face pad)))
-     (fset 'powerline-major-mode #'mode-icons--powerline-major-mode)))
+     (fset 'powerline-major-mode #'mode-icons--powerline-major-mode)
+     (fset 'mode-icons--real-powerline-raw #'powerline-raw)
+     (defun mode-icons--powerline-raw (str &optional face pad)
+       "Render STR as mode-line data using FACE and optionally PAD import on left (l) or right (r).
+This uses `mode-icons--recolor-string' when `mode-icons-mode' is enabled."
+       (if mode-icons-mode
+           (when str
+             (let* ((rendered-str (format-mode-line str))
+                    (padded-str (concat
+                                 (when (and (> (length rendered-str) 0) (eq pad 'l)) " ")
+                                 (if (listp str) rendered-str str)
+                                 (when (and (> (length rendered-str) 0) (eq pad 'r)) " "))))
+
+               (if face
+                   (mode-icons--recolor-string (pl/add-text-property padded-str 'face face)
+                                               (mode-icons--selected-window-active) face)
+                 padded-str)))
+         (mode-icons--real-powerline-raw str face pad)))
+     (fset 'powerline-raw #'mode-icons--powerline-raw)))
 
 
 (eval-after-load 'emojify
