@@ -237,6 +237,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Image\\[xpm\\]\\'" "xpm" ext)
     ("\\`Image\\[png\\]\\'" "png" ext)
     ("\\` ?AI\\'" #xf03c FontAwesome)
+    ("\\` ?Isearch\\'" #xf002)
     ;; Diminished modes
     ("\\` ?\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil))
   "Icons for major and minor modes.
@@ -1712,6 +1713,10 @@ When ENABLE is non-nil, enable the changes to the mode line."
                     (mode-icons-set-minor-mode-icon)))))))
 
 (add-hook 'emacs-startup-hook #'mode-icons-reset)
+
+(defadvice isearch-mode (after mode-icons--reset-isearch-icon activate)
+  "Make `mode-icons' aware of icon."
+  (mode-icons-set-minor-mode-icon))
 
 (eval-after-load 'powerline
   '(progn
