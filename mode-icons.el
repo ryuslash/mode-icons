@@ -1719,10 +1719,6 @@ When ENABLE is non-nil, enable the changes to the mode line."
   "Make `mode-icons' aware of icon."
   (mode-icons-set-minor-mode-icon))
 
-(defadvice command-execute (after mode-icons--reset-minor-mode-icons activate)
-  "Make `mode-icons' aware of any recenty activated minor modes."
-  (mode-icons-set-minor-mode-icon))
-
 (eval-after-load 'powerline
   '(progn
      (declare-function mode-icons--real-powerline-minor-modes "powerline")
@@ -1760,7 +1756,6 @@ This uses `mode-icons--recolor-string' when `mode-icons-mode' is enabled."
                                  (when (and (> (length rendered-str) 0) (eq pad 'l)) " ")
                                  (if (listp str) rendered-str str)
                                  (when (and (> (length rendered-str) 0) (eq pad 'r)) " "))))
-
                (if face
                    (mode-icons--recolor-string (pl/add-text-property padded-str 'face face)
                                                (mode-icons--selected-window-active) face)
