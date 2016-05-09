@@ -329,13 +329,37 @@ Assumes that FOREGROUND and BACKGROUND are (r g b) lists."
 (defvar mode-icons-get-icon-display-xpm-bw-face (make-hash-table)
   "Hash table of dynamic images.")
 
+(defun mode-icons-background-color (&optional face)
+  "Get the background color of FACE.
+In order, will try to get the background color from:
+- FACE
+- `mode-line' face
+- `default' face
+- Assume white."
+  (color-name-to-rgb (or (face-background (or face 'mode-line))
+                         (face-background 'mode-line)
+                         (face-background 'default)
+                         "white")))
+
+(defun mode-icons-foreground-color (&optional face)
+  "Get the foreground color of FACE.
+In order, will try to get the foreground color from:
+- FACE
+- `mode-line' face
+- `default' face
+- Assume black."
+  (color-name-to-rgb (or (face-foreground (or face 'mode-line))
+                         (face-foreground 'mode-line)
+                         (face-foreground 'default)
+                         "black")))
+
 (defun mode-icons-get-icon-display-xpm-bw-face (icon-path &optional face)
   "Change xpm at ICON-PATH to match FACE.
 The white is changed to the background color.
 The black is changed to the foreground color.
 Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
-  (let* ((background (color-name-to-rgb (face-background (or face 'mode-line))))
-         (foreground (color-name-to-rgb (face-foreground (or face 'mode-line))))
+  (let* ((background (mode-icons-background-color face))
+         (foreground (mode-icons-foreground-color face))
          (lst (mode-icons-interpolate-from-scale foreground background))
          (name (concat "mode_icons_bw_" (substring (mode-icons-interpolate background foreground 0.0) 1) "_"
                        (substring (mode-icons-interpolate background foreground 1.0) 1) "_"
@@ -386,8 +410,8 @@ Returns a replacement list for `mode-icons-get-icon-display-xpm-replace'"
   "Desaturate the xpm at ICON-PATH.
 When FACE is non-nil, match the foreground and background colors
 in FACE instead of making the image black and white."
-  (let* ((background (color-name-to-rgb (face-background (or face 'mode-line))))
-         (foreground (color-name-to-rgb (face-foreground (or face 'mode-line))))
+  (let* ((background (mode-icons-background-color face))
+         (foreground (mode-icons-foreground-color face))
          (lst (mode-icons-desaturate-colors icon-path foreground background))
          (name (concat "mode_icons_desaturate_"
                        (or (and background foreground
@@ -866,9 +890,9 @@ of 20px."
              (not (file-exists-p xpm)))
     (puthash xpm t mode-icons--convert-text-to-xpm)
     (let ((script (format mode-icons--font-to-xpm-gimp-script text font xpm))
-          (background (and face (color-name-to-rgb (face-background face))))
-          (foreground (and face (color-name-to-rgb (face-foreground face)))))
-      (when background
+          (background (mode-icons-background-color face))
+          (foreground (mode-icons-foreground-color face)))
+      (when face
         (setq background (mapcar (lambda(x)
                                    (round (* 255 x))) background)
               foreground (mapcar (lambda(x)
