@@ -21,6 +21,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
     immediately after activating an iconified mode.
 - Powerline now recolors lines correctly by modified powerline-raw
   function.
+- mode-icons now recolors font icons correctly when the font is
+  missing from the system.
 
 ## [0.4.0]
 
