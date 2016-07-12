@@ -240,6 +240,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Image\\[png\\]\\'" "png" ext)
     ("\\` ?AI\\'" #xf03c FontAwesome)
     ("\\` ?Isearch\\'" #xf002)
+    (default #xf059 FontAwesome)
     ;; Diminished modes
     ("\\` ?\\(?:ElDoc\\|Anzu\\|SP\\|Guide\\|PgLn\\|Undo-Tree\\|Ergo.*\\|,\\|Isearch\\|Ind\\)\\'" nil nil))
   "Icons for major and minor modes.
@@ -259,6 +260,7 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Apple" apple)
                  (const :tag "Windows" win)
                  (const :tag "Unix" unix)
+                 (const :tag "Default Icon" default)
                  (function :tag "Enriched minor mode"))
                 (choice
                  (string :tag "Icon Name")
@@ -599,7 +601,7 @@ Use EVENT to determine location."
   (let* ((bfn (buffer-file-name))
          (revert-p (not (or (and bfn (file-remote-p buffer-file-name))
                             (verify-visited-file-modtime (current-buffer)))))
-          (steal-p (and (not (or (and bfn (file-remote-p buffer-file-name))
+         (steal-p (and (not (or (and bfn (file-remote-p buffer-file-name))
                                 (member (file-locked-p bfn) '(nil t))))))
          (mod-p (buffer-modified-p (window-buffer window))))
     (format "Buffer is %s\nmouse-1: %s Buffer\nmouse-3: Toggle modification state"
@@ -1250,6 +1252,11 @@ icon as well."
   :type 'boolean
   :group 'mode-icons)
 
+(defcustom mode-icons-use-default-icon nil
+  "Use the 'default icon when icon-name cannot be found."
+  :type 'boolean
+  :group 'mode-icons)
+
 (defun mode-icons-get-mode-icon (mode &optional face active)
   "Get the icon for MODE, if there is one.
 FACE represents the face used when the icon is a xpm-bw image.
@@ -1258,6 +1265,8 @@ ACTIVE represents if the window is active."
          (icon-spec (mode-icons-get-icon-spec mode-name))
          (face (mode-icons--get-face face active))
          ret)
+    (when (and (not icon-spec) mode-icons-use-default-icon)
+      (setq icon-spec (mode-icons-get-icon-spec 'default)))
     (if icon-spec
         (setq ret
               (if mode-icons-show-mode-name

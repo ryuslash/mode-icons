@@ -22,7 +22,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Powerline now recolors lines correctly by modified powerline-raw
   function.
 - mode-icons now recolors font icons correctly when the font is
-  missing from the system.
+  missing from the system
+- mode-icons now allows for a default icon.  This can be turned on
+  with the new option `mode-icons-use-default-icon`
 
 ## [0.4.0]
 
