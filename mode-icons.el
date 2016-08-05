@@ -207,7 +207,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Spacemacs buffer\\'" "spacemacs" png)
     ("\\` ?emoji\\'" "emoji" png)
     ("\\`Org-Agenda" #xf046 FontAwesome)
-    (read-only #xf0n23 FontAwesome)
+    (read-only #xf023 FontAwesome)
     (writable #xf09c FontAwesome)
     (save #xf0c7 FontAwesome)
     (saved "" nil)
