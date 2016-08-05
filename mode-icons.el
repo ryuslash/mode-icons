@@ -455,10 +455,18 @@ This only works with xpm files."
 ACTIVE tells if current window is active."
   (or face (and active 'mode-line) 'mode-line-inactive))
 
+(defcustom mode-icons-line-height-adjust 0
+  "The manual adjustment of the mode-line height for images."
+  :type 'integer
+  :group 'mode-icons)
+
 (defun mode-icons-line-height (&optional window)
   "Gets the height in pixels of WINDOW's mode-line, if accessible.
-This uses `window-mode-line-height' on emacs 24.4+.  Otherwise it assumes 16."
-  (or (and (fboundp 'window-mode-line-height) (window-mode-line-height window)) 16))
+This uses `window-mode-line-height' on emacs 24.4+.  Otherwise it assumes 16.
+
+This function also adjusts the line height by `mode-icons-line-height-adjust'."
+  (+ mode-icons-line-height-adjust
+     (or (and (fboundp 'window-mode-line-height) (window-mode-line-height window)) 16)))
 
 (defun mode-icons-get-icon-display (icon type &optional face active)
   "Get the value for the display property of ICON having TYPE.
