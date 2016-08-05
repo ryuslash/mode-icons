@@ -207,6 +207,11 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Spacemacs buffer\\'" "spacemacs" png)
     ("\\` ?emoji\\'" "emoji" png)
     ("\\`Org-Agenda" #xf046 FontAwesome)
+    ("\\`PS\\'" "powershell" xpm)
+    (mode-icons-powershell-p "powershell" xpm)
+    (mode-icons-cmd-p "cmd" xpm-bw)
+    (mode-icons-msys-p "msys" xpm)
+    (mode-icons-cygwin-p "cygwin" xpm)
     (read-only #xf023 FontAwesome)
     (writable #xf09c FontAwesome)
     (save #xf0c7 FontAwesome)
@@ -280,6 +285,23 @@ without the extension.  And the third being the type of icon."
                  (const :tag "Mode Icons Generated file-type" ext)
                  (symbol :tag "Font"))))
   :group 'mode-icons)
+
+(defun mode-icons-powershell-p (&optional match)
+  "Is the current mode a powershell process?"
+  (let ((proc (get-buffer-process (current-buffer))))
+    (and proc (string-match-p (or match "powershell") (car (process-command proc))))))
+
+(defun mode-icons-cmd-p ()
+  "Is the current mode a CMD shell?"
+  (mode-icons-powershell-p "cmdproxy"))
+
+(defun mode-icons-cygwin-p ()
+  "Is the current mode a CMD shell?"
+  (mode-icons-powershell-p "cygwin"))
+
+(defun mode-icons-msys-p ()
+  "Is the current mode a CMD shell?"
+  (mode-icons-powershell-p "msys"))
 
 (defvar mode-icons-get-xpm-string (make-hash-table :test 'equal))
 (defun mode-icons-get-xpm-string (icon-path)
@@ -1230,29 +1252,37 @@ ACTIVE is a flag to tell if the current window is active."
 
 (defvar mode-icons-get-icon-spec (make-hash-table :test 'equal)
   "Hash table of icon-specifications.")
-(defun mode-icons-get-icon-spec (mode)
+(defun mode-icons-get-icon-spec (mode &optional is-major-mode-p)
   "Get icon spec for MODE based on regular expression."
   (or (gethash mode mode-icons-get-icon-spec)
-      (puthash mode (let* (case-fold-search
-                           (icon-spec (catch 'found-mode
-                                        (dolist (item mode-icons)
-                                          (when (and (mode-icons-supported-p item)
-                                                     (or
-                                                      (and
-                                                       (stringp (car item))
-                                                       (stringp mode)
-                                                       (string-match-p (car item) mode))
-                                                      (and
-                                                       (symbolp (car item))
-                                                       (symbolp mode)
-                                                       (eq mode (car item)))))
-                                            (throw 'found-mode item)))
-                                        nil)))
-                      (when (and icon-spec (eq (nth 2 icon-spec) 'emoji)
-                                 (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))
-                        (setq icon-spec (list (nth 0 icon-spec) (mode-icons--get-emoji-xpm-file icon-spec t) 'xpm)))
-                      icon-spec)
-               mode-icons-get-icon-spec)))
+      (let* (case-fold-search
+             (ignore-cache nil)
+             (icon-spec (catch 'found-mode
+                          (dolist (item mode-icons)
+                            (when (and (mode-icons-supported-p item)
+                                       (or
+                                        (and
+                                         (stringp (car item))
+                                         (stringp mode)
+                                         (string-match-p (car item) mode))
+                                        (and
+                                         (symbolp (car item))
+                                         (symbolp mode)
+                                         (eq mode (car item)))
+                                        (and
+                                         is-major-mode-p
+                                         (symbolp (car item))
+                                         (functionp (car item))
+                                         (and (ignore-errors (funcall (car item)))
+                                              (setq ignore-cache t)))))
+                              (throw 'found-mode item)))
+                          nil)))
+        (when (and icon-spec (eq (nth 2 icon-spec) 'emoji)
+                   (file-exists-p (mode-icons--get-emoji-xpm-file icon-spec)))
+          (setq icon-spec (list (nth 0 icon-spec) (mode-icons--get-emoji-xpm-file icon-spec t) 'xpm)))
+        (unless ignore-cache
+          (puthash mode icon-spec mode-icons-get-icon-spec))
+        icon-spec)))
 
 (defcustom mode-icons-show-mode-name nil
   "Show Icon and `mode-name'."
@@ -1277,7 +1307,7 @@ icon as well."
 FACE represents the face used when the icon is a xpm-bw image.
 ACTIVE represents if the window is active."
   (let* ((mode-name (format-mode-line mode))
-         (icon-spec (mode-icons-get-icon-spec mode-name))
+         (icon-spec (mode-icons-get-icon-spec mode-name t))
          (face (mode-icons--get-face face active))
          ret)
     (when (and (not icon-spec) mode-icons-use-default-icon)
