@@ -9,6 +9,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - Icon for spacemacs buffer.
 - Icon for Isearch (from Font Awesome)
+- Added option mode-icons-line-height-adjust to allow imagmagick to
+  adjust icons up or down a bit compared to what emacs returns as the
+  mode-line height.
 
 ### Changed
 
