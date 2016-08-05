@@ -206,7 +206,8 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Dockerfile\\'" "docker" xpm)
     ("\\`Spacemacs buffer\\'" "spacemacs" png)
     ("\\` ?emoji\\'" "emoji" png)
-    (read-only #xf023 FontAwesome)
+    ("\\`Org-Agenda" #xf046 FontAwesome)
+    (read-only #xf0n23 FontAwesome)
     (writable #xf09c FontAwesome)
     (save #xf0c7 FontAwesome)
     (saved "" nil)
@@ -727,7 +728,8 @@ When nil, don't stop the gimp inferior mode.")
         (save-excursion
           (run-scheme  (format "\"%s\" %s" mode-icons--gimp mode-icons--gimp-inferior-args))))
       (with-current-buffer (get-buffer "*scheme*")
-        (rename-buffer "*mode-icons-gimp*")))))
+        (rename-buffer "*mode-icons-gimp*")
+        (set-process-query-on-exit-flag (get-buffer-process (get-buffer "*mode-icons-gimp*")) nil)))))
 
 (defvar mode-icons--gimp-ready-p nil)
 
