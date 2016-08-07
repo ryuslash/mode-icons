@@ -196,7 +196,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Elixir\\'" #xf115 font-mfizz)
     ("\\`Erlang\\'" #xf116 font-mfizz)
     ("\\`Haskell\\'" #xf126 font-mfizz)
-    ("\\`Clojure\\'" #xf10a font-mfizz)
+    ("\\`Clojure\\'" #xf10b font-mfizz)
     ("\\`Java\\(/.*\\|\\)\\'" #xf12b font-mfizz)
     ("\\`C?Perl\\'" #xf148 font-mfizz)
     ("\\`Octave\\'" "octave" xpm)
