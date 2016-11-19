@@ -153,6 +153,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`PHP\\(\\|/.*\\)\\'" "php" xpm)
     ("\\`Projectile Rails Server\\'" "rails" xpm)
     ("\\`Python\\'" "python" xpm)
+    ("\\` Emmet\\'" "emmet" xpm)
     ("\\`Ruby\\'" "ruby" xpm)
     ("\\`ESS\\[S\\]\\'" "R" xpm)
     ("\\`ESS\\[SAS\\]\\'" "sas" xpm)
