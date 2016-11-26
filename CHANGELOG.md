@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Icon for emmet minor mode.
 - Icon for spacemacs buffer.
 - Icon for Isearch (from Font Awesome)
 - Icon for Org-Agenda (From Font Awesome)
