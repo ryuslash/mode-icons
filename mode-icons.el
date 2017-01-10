@@ -315,7 +315,7 @@ If ICON-PATH is a string, return that."
       (and (stringp icon-path) icon-path)))
 
 (defun mode-icons-get-icon-display-xpm-replace (icon-path rep-alist &optional name)
-  "Get xpm image from ICON-PATH and reaplce REP-ALIST in file.
+  "Get xpm image from ICON-PATH and replace REP-ALIST in file.
 When NAME is non-nil, also replace the internal xpm image name."
   (let ((case-fold-search t)
         (img (mode-icons-get-xpm-string icon-path))
@@ -389,7 +389,7 @@ In order, will try to get the foreground color from:
   "Change xpm at ICON-PATH to match FACE.
 The white is changed to the background color.
 The black is changed to the foreground color.
-Grayscale colors are aslo changed by `mode-icons-interpolate-from-scale'."
+Grayscale colors are also changed by `mode-icons-interpolate-from-scale'."
   (let* ((background (mode-icons-background-color face))
          (foreground (mode-icons-foreground-color face))
          (lst (mode-icons-interpolate-from-scale foreground background))
