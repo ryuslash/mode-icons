@@ -34,6 +34,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   missing from the system
 - mode-icons now allows for a default icon.  This can be turned on
   with the new option `mode-icons-use-default-icon`
+- Fix coloring algorithm for xpm images.
 
 ## [0.4.0]
 
