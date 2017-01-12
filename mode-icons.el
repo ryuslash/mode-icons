@@ -733,8 +733,6 @@ everywhere else."
             (and (image-type-available-p 'xpm)
                  (file-exists-p (mode-icons--get-png-xpm-file icon-spec))))) ))
 
-(defvar emojify-image-dir)
-
 (defvar emojify-emojis)
 
 (defvar mode-icons--gimp (executable-find "gimp")
@@ -1139,7 +1137,9 @@ ACTIVE is a flag for if  the current window is active."
       (unless emojify-emojis
         (emojify-set-emoji-data))
       (let* ((emoji (ht-get emojify-emojis (nth 1 icon-spec)))
-             (image-file (expand-file-name (ht-get emoji "image") emojify-image-dir))
+             (image-file (expand-file-name (ht-get emoji "image") (if (fboundp 'emojify-image-dir)
+                                                                      (emojify-image-dir)
+                                                                    emojify-image-dir)))
              (image-type (intern (upcase (file-name-extension image-file)))))
         (if (not (file-exists-p image-file))
             (propertize (format "%s" mode)

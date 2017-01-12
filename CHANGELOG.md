@@ -36,6 +36,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   with the new option `mode-icons-use-default-icon`
 - Fix coloring algorithm for xpm images.
 - Fix icon for Shell-script.
+- Response to emojify's update.
+
 
 ## [0.4.0]
 
