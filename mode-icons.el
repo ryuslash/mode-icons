@@ -189,6 +189,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Custom\\'" #xf013 FontAwesome)
     ("\\`Go\\'" "go" xpm)
     ("\\` ?Rbow\\'" "rainbow" xpm)
+    ("\\` ?ivy\\'" "ivy" xpm) ;; Icon created by Philipp Lehmann from the Noun Project https://thenounproject.com/search/?q=ivy&i=329756
     ("\\` ?ICY\\'" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.html
     ("\\` ?Golden\\'" "golden" xpm-bw) ;; Icon created by Arthur Shlain from Noun Project
     ("\\`BibTeX\\'\\'" "bibtex" xpm-bw)
