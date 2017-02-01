@@ -155,6 +155,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Python\\'" "python" xpm)
     ("\\` Emmet\\'" "emmet" xpm)
     ("\\`Ruby\\'" "ruby" xpm)
+    ("\\`EnhRuby\\'" "ruby" xpm)
     ("\\`ESS\\[S\\]\\'" "R" xpm)
     ("\\`ESS\\[SAS\\]\\'" "sas" xpm)
     ("\\`ESS\\[BUGS\\]\\'" #xf188 FontAwesome)
