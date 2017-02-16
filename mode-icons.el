@@ -36,6 +36,7 @@
 ;; - Haml
 ;; - JavaScript
 ;; - Lisp
+;; - Lua
 ;; - nXML
 ;; - PHP
 ;; - Python
@@ -148,6 +149,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Inf-Ruby\\'" "infruby" xpm)
     ("\\`Java[Ss]cript\\'" "js" xpm)
     ("\\`Lisp\\'" "cl" xpm)
+    ("\\`Lua\\'" "Lua-Logo_16x16" png)
     ("\\`nXML\\'" "xml" xpm)
     ("\\`Org\\'" "org" xpm)
     ("\\`PHP\\(\\|/.*\\)\\'" "php" xpm)
