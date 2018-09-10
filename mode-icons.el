@@ -238,7 +238,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\` ?company\\'" #xf1ad FontAwesome)
     ("\\` ?AC\\'" #xf18e FontAwesome)
     ("\\` ?Fly\\'" #xea12 IcoMoon-Free)
-    ("\\` ?FlyC.*\\'" "flycheck" xpm)
+    ;; ("\\` ?FlyC.*\\'" "flycheck" xpm)
     ("\\` ?SP\\(/s\\)?\\'" "smartparens" xpm)
     ("\\` ?Ergo" #xf11c FontAwesome)
     ("\\` ?drag\\'" #xf047 FontAwesome)
