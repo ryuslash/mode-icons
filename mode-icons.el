@@ -159,6 +159,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\` Emmet\\'" "emmet" xpm)
     ("\\`RJSX\\'" "react" xpm)
     ("\\`Ruby\\'" "ruby" xpm)
+    ("\\`Rust\\'" "rust" xpm)
     ("\\`EnhRuby\\'" "ruby" xpm)
     ("\\`ESS\\[S\\]\\'" "R" xpm)
     ("\\`ESS\\[SAS\\]\\'" "sas" xpm)
