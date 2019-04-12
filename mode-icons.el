@@ -35,6 +35,7 @@
 ;; - HTML
 ;; - Haml
 ;; - JavaScript
+;; - React
 ;; - Lisp
 ;; - Lua
 ;; - nXML
@@ -156,6 +157,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Projectile Rails Server\\'" "rails" xpm)
     ("\\`Python\\'" "python" xpm)
     ("\\` Emmet\\'" "emmet" xpm)
+    ("\\`React\\'" "react" xpm)
     ("\\`Ruby\\'" "ruby" xpm)
     ("\\`EnhRuby\\'" "ruby" xpm)
     ("\\`ESS\\[S\\]\\'" "R" xpm)
