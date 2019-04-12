@@ -42,6 +42,7 @@
 ;; - Python
 ;; - React
 ;; - Ruby
+;; - Rust
 ;; - Sass/Scss
 ;; - Scheme
 ;; - Shell-script
