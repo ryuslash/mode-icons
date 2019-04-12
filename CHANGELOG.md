@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Icon for Isearch (from Font Awesome)
 - Icon for Org-Agenda (From Font Awesome)
 - Icon for Powershell
+- Icon for Rust
 - Icon for Windows cmd
 - Icon for MSYS shell
 - Icon for Cygwin shell
