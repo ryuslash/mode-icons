@@ -192,7 +192,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Calendar\\'" #xf073 FontAwesome)
     ("\\`Help\\'" #xf059 FontAwesome)
     ("\\`WoMan\\'" #xf05a FontAwesome)
-    ("\\`C\\(/.*\\|\\)\\'" #xf107 font-mfizz)
+    ("\\`C\\(/.*\\|\\)\\'" "c" xpm)
     ("\\`Custom\\'" #xf013 FontAwesome)
     ("\\`Go\\'" "go" xpm)
     ("\\` ?Rbow\\'" "rainbow" xpm)
@@ -200,8 +200,8 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\` ?ICY\\'" "icy" xpm) ;; http://www.clipartpal.com/clipart_pd/weather/ice_10206.html
     ("\\` ?Golden\\'" "golden" xpm-bw) ;; Icon created by Arthur Shlain from Noun Project
     ("\\`BibTeX\\'\\'" "bibtex" xpm-bw)
-    ("\\`C[+][+]\\(/.*\\|\\)\\'" #xf10c font-mfizz)
-    ("\\`C[#]\\(/.*\\|\\)\\'" #xf10d font-mfizz)
+    ("\\`C[+][+]\\(/.*\\|\\)\\'" "cpp" xpm)
+    ("\\`C[#]\\(/.*\\|\\)\\'" "csharp" xpm)
     ("\\`Elixir\\'" #xf115 font-mfizz)
     ("\\`Erlang\\'" #xf116 font-mfizz)
     ("\\`Haskell\\'" #xf126 font-mfizz)
