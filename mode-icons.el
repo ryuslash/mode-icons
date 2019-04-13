@@ -29,8 +29,12 @@
 ;; icon.  Currently the following programming modes are supported,
 ;; among others:
 ;;
+;; - C
+;; - C++
+;; - C#
 ;; - CSS
 ;; - Coffee
+;; - Dart
 ;; - Emacs-Lisp
 ;; - HTML
 ;; - Haml
@@ -143,6 +147,7 @@ This was stole/modified from `c-save-buffer-state'"
   `(("\\`CSS\\'" "css" xpm)
     ("\\`Coffee\\'" "coffee" xpm-bw)
     ("\\`Compilation\\'" "compile" xpm)
+    ("\\`Dart\\'" "dart" xpm)
     ("\\`Emacs-Lisp\\'" "emacs" xpm)
     ("\\`Lisp Interaction\\'" "emacs" xpm)
     ("\\`HTML\\'" "html" xpm)
