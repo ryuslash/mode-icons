@@ -148,6 +148,7 @@ This was stole/modified from `c-save-buffer-state'"
     ("\\`Coffee\\'" "coffee" xpm-bw)
     ("\\`Compilation\\'" "compile" xpm)
     ("\\`Dart\\'" "dart" xpm)
+    ("\\`Flutter\\'" "flutter" xpm)
     ("\\`Elixir\\'" "elixir" xpm)
     ("\\`Erlang\\'" "erlang" xpm)
     ("\\`Emacs-Lisp\\'" "emacs" xpm)
