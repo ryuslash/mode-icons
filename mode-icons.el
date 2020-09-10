@@ -512,7 +512,7 @@ This uses `window-mode-line-height' on emacs 24.4+.  Otherwise it assumes 16.
 
 This function also adjusts the line height by `mode-icons-line-height-adjust'."
   (+ mode-icons-line-height-adjust
-     (or (and (fboundp 'window-mode-line-height) (window-mode-line-height window)) 16)))
+     (or (and (fboundp 'window-mode-line-height) (window-default-font-height window)) 16)))
 
 (defun mode-icons-get-icon-display (icon type &optional face active)
   "Get the value for the display property of ICON having TYPE.
