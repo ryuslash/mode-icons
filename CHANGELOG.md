@@ -42,6 +42,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix coloring algorithm for xpm images.
 - Fix icon for Shell-script.
 - Response to emojify's update.
+- This release should make the mode-icons the same height as text in the
+  mode-line regardless of which version of Emacs you're using.
 
 ### Fixed
 
