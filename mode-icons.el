@@ -507,12 +507,12 @@ ACTIVE tells if current window is active."
   :group 'mode-icons)
 
 (defun mode-icons-line-height (&optional window)
-  "Gets the height in pixels of WINDOW's mode-line, if accessible.
-This uses `window-mode-line-height' on emacs 24.4+.  Otherwise it assumes 16.
-
-This function also adjusts the line height by `mode-icons-line-height-adjust'."
+  "Gets the height in pixels of WINDOW's mode-line font.
+This function also adjusts the line height by
+`mode-icons-line-height-adjust'. If WINDOW is nil, it defaults to
+the current window"
   (+ mode-icons-line-height-adjust
-     (or (and (fboundp 'window-mode-line-height) (window-default-font-height window)) 16)))
+     (aref (font-info (face-font 'mode-line) (window-frame window)) 3)))
 
 (defun mode-icons-get-icon-display (icon type &optional face active)
   "Get the value for the display property of ICON having TYPE.
