@@ -43,6 +43,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix icon for Shell-script.
 - Response to emojify's update.
 
+### Fixed
+
+- The height of mode-icons in Emacs 27.1
 
 ## [0.4.0]
 
