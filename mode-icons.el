@@ -1790,20 +1790,38 @@ When ENABLE is non-nil, enable the changes to the mode line."
       (when place-eol
         (setcar place-eol mode-icons--backup-eol-construct)))))
 
+(defun mode-icons--mode-enable ()
+  "Set up for the command ‘mode-icons-mode’."
+  (add-hook 'after-change-major-mode-hook #'mode-icons-reset)
+  (mode-icons-fix t)
+  (mode-icons-set-minor-mode-icon)
+  (mode-icons-major-mode-icons))
+
+(defun mode-icons--mode-enable-for-first-frame ()
+  "Set up for the command ‘mode-icons-mode’ and then stop it from running again.
+This function should be used in the
+‘server-after-make-frame-hook’ hook. It will call
+‘mode-icons--mode-enable’ and then remove itself from
+‘server-after-make-frame-hook’."
+  (mode-icons--mode-enable)
+  (remove-hook 'server-after-make-frame-hook #'mode-icons--mode-enable-for-first-frame))
+
+(defun mode-icons--mode-disable ()
+  "Tear down for the command ‘mode-icons-mode’."
+  (remove-hook 'after-change-major-mode-hook #'mode-icons-reset)
+  (mode-icons-set-minor-mode-icon-undo)
+  (mode-icons-major-mode-icons-undo)
+  (mode-icons-fix))
+
 ;;;###autoload
 (define-minor-mode mode-icons-mode
   "Replace the name of the current major mode with an icon."
   :global t
   (if mode-icons-mode
-      (progn
-        (add-hook 'after-change-major-mode-hook #'mode-icons-reset)
-        (mode-icons-fix t)
-        (mode-icons-set-minor-mode-icon)
-        (mode-icons-major-mode-icons))
-    (remove-hook 'after-change-major-mode-hook #'mode-icons-reset)
-    (mode-icons-set-minor-mode-icon-undo)
-    (mode-icons-major-mode-icons-undo)
-    (mode-icons-fix)))
+      (if (daemonp)
+          (add-hook 'server-after-make-frame-hook #'mode-icons--mode-enable-for-first-frame)
+        (mode-icons--mode-enable))
+    (mode-icons--mode-disable)))
 
 (defun mode-icons-reset-hash ()
   "Reset `mode-icons-get-icon-spec' and `mode-icons-get-icon-display'."
@@ -1825,8 +1843,6 @@ When ENABLE is non-nil, enable the changes to the mode line."
                 (when (buffer-live-p ,(current-buffer))
                   (with-current-buffer ,(current-buffer)
                     (mode-icons-set-minor-mode-icon)))))))
-
-(add-hook 'emacs-startup-hook #'mode-icons-reset)
 
 (defadvice isearch-mode (after mode-icons--reset-isearch-icon activate)
   "Make `mode-icons' aware of icon."
