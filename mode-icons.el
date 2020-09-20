@@ -510,9 +510,14 @@ ACTIVE tells if current window is active."
   "Gets the height in pixels of WINDOW's mode-line font.
 This function also adjusts the line height by
 `mode-icons-line-height-adjust'. If WINDOW is nil, it defaults to
-the current window"
-  (+ mode-icons-line-height-adjust
-     (aref (font-info (face-font 'mode-line) (window-frame window)) 3)))
+the current window.
+
+This function returns nil if the current display isn’t a graphic
+one. This is to make sure that things still work when dealing
+with, for example, a starting daemon."
+  (when (display-graphic-p)
+    (+ mode-icons-line-height-adjust
+       (aref (font-info (face-font 'mode-line) (window-frame window)) 3))))
 
 (defun mode-icons-get-icon-display (icon type &optional face active)
   "Get the value for the display property of ICON having TYPE.
