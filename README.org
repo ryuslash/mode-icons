@@ -2,6 +2,9 @@
 #+DATE: Monday, Dec 21 2015
 #+STARTUP: content
 
+[[https://melpa.org/#/mode-icons][file:https://melpa.org/packages/mode-icons-badge.svg]]
+[[https://stable.melpa.org/#/mode-icons][file:https://stable.melpa.org/packages/mode-icons-badge.svg]]
+
 Show icons instead of mode names in emacs.
 
 [[https://raw.githubusercontent.com/rhoit/mode-icons/dump/screenshots/screenshot01.png]]
