@@ -1,5 +1,5 @@
 /* XPM */
-static char * e:\EmacsPortable_App\Data\src\mode_icons\icons\octave_xpm[] = {
+static char * octave_xpm[] = {
 "16 16 79 1",
 " 	c None",
 ".	c #48BBD8",

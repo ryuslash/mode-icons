@@ -1,5 +1,5 @@
 /* XPM */
-static char * e:\EmacsPortable_App\Data\src\mode_icons\icons\golden_xpm[] = {
+static char * golden_xpm[] = {
 "25 16 84 1",
 " 	c None",
 ".	c #000000",

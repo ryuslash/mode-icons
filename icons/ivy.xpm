@@ -1,5 +1,5 @@
 /* XPM */
-static char * c:\EmacsPortable_App\Data\src\mode_icons\icons\ivy_xpm[] = {
+static char * ivy_xpm[] = {
 "16 16 2 1",
 " 	c None",
 ".	c #000000",

@@ -1,5 +1,5 @@
 /* XPM */
-static char * e:\EmacsPortable_App\Data\src\mode_icons\icons\autohotkey_xpm[] = {
+static char * autohotkey_xpm[] = {
 "16 16 154 2",
 "  	c None",
 ". 	c #78B178",
