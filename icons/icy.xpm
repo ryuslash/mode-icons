@@ -1,5 +1,5 @@
 /* XPM */
-static char * e:\EmacsPortable_App\Data\src\mode_icons\icons\icy_xpm[] = {
+static char * icy_xpm[] = {
 "18 16 88 1",
 " 	c None",
 ".	c #777C80",

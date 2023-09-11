@@ -1,5 +1,5 @@
 /* XPM */
-static char * d:\EmacsPortable_App\Data\src\mode_icons\icons\cygwin_xpm[] = {
+static char * cygwin_xpm[] = {
 "16 16 3 1",
 " 	c None",
 ".	c #000000",

@@ -1,5 +1,5 @@
 /* XPM */
-static char * d:\EmacsPortable_App\Data\src\mode_icons\icons\msys_xpm[] = {
+static char * msys_xpm[] = {
 "16 16 127 2",
 "  	c None",
 ". 	c #7A536A",

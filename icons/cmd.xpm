@@ -1,5 +1,5 @@
 /* XPM */
-static char * d:\EmacsPortable_App\Data\src\mode_icons\icons\cmd_xpm[] = {
+static char * cmd_xpm[] = {
 "16 16 27 1",
 " 	g None",
 ".	g #FFFFFF",

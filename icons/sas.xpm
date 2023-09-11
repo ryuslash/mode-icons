@@ -1,5 +1,5 @@
 /* XPM */
-static char * E:\EmacsPortable_App\Data\src\mode_icons\icons\sas_xpm[] = {
+static char * sas_xpm[] = {
 "15 16 87 1",
 " 	c None",
 ".	c #6095CB",
